@@ -677,6 +677,7 @@ function newGame(len){
   st={v:SAVE_V,len,phase:"card",i:0,prog:0,...blank(),p,peers,s:{...p.stats},
     money:{aid:300,half:600,mid:1200,rich:2500}[p.fam.k],lunch:p.fam.money<=1?"market":"canteen",
     partner:p.orient==="無性戀"||rnd()>.22?null:mkPartner(p,rnd()<.4),aff,flags:{pet:rnd()<.35}};
+  ensureWorld(st);
   addLog(`2026年9月，你以「${p.orig}」身份入讀香港兆基創意書院中四。${p.orig==="外校新生"?"之前讀"+p.prev+"。":"已經喺呢度讀咗三年初中。"}同學好快幫你改咗個花名：「${p.nick}」。`,true);
   save();
 }
@@ -800,7 +801,7 @@ function cwOpts(label){
 }
 const EVENTS=[
  {id:"welcome",y:1,m:9,scene:"school",title:"迎新週：班代表",
-  text:()=>`九月第一個星期。Mentor 叫大家唔使叫佢「老師」，叫花名就得。要揀班代表，Mentor 問：「有冇人想做？」全班突然好專心望地下。${st.p.orig==="外校新生"?"你仲未識得幾多個人。":"原校生互相打眼色。"}`,
+  text:()=>`九月第一個星期。你嘅 Mentor 係${M()}，教${st.mentor.subj}，${({loose:"講明唔會日日追功課",strict:"第一日就派咗張出席紀錄表",friend:"第一句就問大家食咗早餐未"})[st.mentor.ty]}。佢叫大家唔使叫佢「老師」，叫名就得。要揀班代表，${M()}問：「有冇人想做？」全班突然好專心望地下。${st.p.orig==="外校新生"?"你仲未識得幾多個人。":"原校生互相打眼色。"}`,
   fact:"迎新活動由學生組成的迎新小組構思及執行，中四迎新加入了班導師設計的部分，以增進原校生與新生融合。（周年報告 2024/25）",
   opts:[
    {t:"舉手做（全班鬆一口氣）",sub:"關係大升，精神下降",run(){flag("rep");apply({rel:6,spirit:-2});addLog("你舉手做咗班代表。全班拍手拍得特別大聲，因為唔使自己做。");}},
@@ -925,7 +926,7 @@ const EVENTS=[
   fact:"書院的情意及社交表現評估（APASO）顯示，中四級的「正向情緒」及「無焦慮及抑鬱徵狀」分數明顯低於全港平均。你不是唯一一個這樣的人。（周年報告 2023/24）",
   help:true,
   opts:[
-   {t:"約 Mentor 傾偈",sub:"精神大升，健康上升",run(){apply({spirit:6,health:2,rel:1});addLog("Mentor 冇俾答案你，只係陪你將要做嘅嘢排咗一次先後。嗰晚你瞓得著。");}},
+   {t:"約 Mentor 傾偈",sub:"精神大升，健康上升",run(){apply({spirit:6,health:2,rel:1});trust(6);addLog("Mentor 冇俾答案你，只係陪你將要做嘅嘢排咗一次先後。嗰晚你瞓得著。");}},
    {t:"預約學校嘅輔導心理學家",sub:"精神大升，健康上升",run(){st.flags.counsel=1;apply({spirit:8,health:3});addLog("你去見咗輔導心理學家。一開始好唔慣，第三次開始覺得有用。");}},
    {t:"放學同朋友去食糖水",sub:"精神、關係上升",run(){const q=bondWith(6);apply({spirit:4,health:1,rel:3});addLog(`你同「${q}」去食糖水，講咗好多同功課無關嘅嘢。`);}},
    {t:"自己頂住，繼續做",sub:"知識、審美上升，精神大跌",run(){apply({aes:2,know:2,spirit:-6,health:-2});addLog("你頂過咗五月。只係之後好耐，你都記得嗰種攰。");}}
@@ -1049,7 +1050,7 @@ const EVENTS=[
  {id:"promo2",y:2,m:7,scene:"school",title:"升留班會議",cond:()=>st.lates>=20,
   text:()=>`今年你又遲到咗 ${st.lates} 次。${st.flags.agreement?"你舊年已經簽過協議書。":""}`,
   fact:"中六全年出席率需超過80%，否則不能獲得畢業證書，也會失去升讀大學的資格（包括台灣、日本、英國等）。（2026-27 跨媒介創作學習班：學務資訊）",
-  opts:[{t:"再簽一次協議書",sub:"精神稍升，健康稍降",run(){st.flags.agreement=2;apply({spirit:1,health:-1});addLog("你再簽咗一次協議書。Mentor 話，中六嘅出席率會決定你畢唔畢到業。",true);}}]},
+  opts:[{t:"再簽一次協議書",sub:"精神稍升，健康稍降",run(){st.flags.agreement=2;apply({spirit:1,health:-1});if(st.mentor.trust>=55){apply({spirit:2});addLog(`你再簽咗一次協議書。${M()}喺會議幫你講咗好說話：「佢遲到，但交嘅嘢冇求其過。」`,true);}else addLog(`你再簽咗一次協議書。${M()}話，中六嘅出席率會決定你畢唔畢到業。`,true);}}]},
  {id:"summer2",y:2,m:8,scene:"home",title:"中五暑假",
   text:()=>"升中六前最後一個長假期。好多人話，作品集同 DSE 都係喺呢個暑假決勝。",
   opts:[
@@ -1078,6 +1079,7 @@ const EVENTS=[
    {t:"去",sub:"審美大升，精神上升，知識下降",run(){st.trips.push("敦煌");apply({aes:6,spirit:2,know:-2});st.works++;addLog(st.track==="DSE"?"你喺洞窟入面臨摹咗成個下晝。返到香港，你畫滿咗一本簿。":"你喺洞窟入面臨摹咗成個下晝。返到香港，你改咗畢業創作嘅方向。",true);}},
    {t:"留喺香港準備申請同 DSE",sub:"知識上升",run(){apply({know:3});addLog("你將個名額讓咗出嚟，留喺香港溫書。");}}
   ]},
+ {id:"mentorForget",y:3,m:10,scene:"school",title:"推薦信",cond:()=>st.mentor.ty!=="strict",text:()=>MFORGET.text(),opts:()=>MFORGET.opts()},
  {id:"apply",y:3,m:11,scene:"school",title:"遞交申請",
   text:()=>`申請季節到。你中五寫低嘅目標係「${targetName(st.target)}」。而家要真正遞交申請。`,
   fact:"老師為同學處理作品集、報考大學聯合招生辦法（JUPAS）或海外大學。書院已與新加坡南洋藝術學院等簽署合作備忘，並接待英國 Leeds Arts University、Norwich University of the Arts 等到校舉辦招生工作坊。（學校發展計劃 2025–28、周年報告）",
@@ -1112,8 +1114,8 @@ const EVENTS=[
   fact:"2025 年書院 DSE 中國語文合格率為62.5%，英國語文合格率為71.88%，近年持續進步。（周年報告 2024/25）",
   opts:()=>[{t:st.track==="DCA"?"交最後一個單元":"行入試場",sub:"",run(){apply({spirit:-2});addLog(st.track==="DCA"?"你交咗 DCA 最後一個單元，喺工作室門口企咗好耐。":"你考完最後一科，喺試場出面間便利店買咗枝汽水。",true);}}]},
  {id:"grad",y:3,m:5,scene:"stage",title:"結業",
-  text:()=>"最後一課。Mentor 講咗一句說話，你一直記住。",
-  opts:[{t:"「如果命運是世上最爛的編劇，我就要做我人生最好的演員。」",sub:"書院開學演出嘅一句對白",run(){apply({spirit:3,health:1,rel:2});addLog("你喺結業禮喊咗，跟住又笑返。");}}]},
+  text:()=>`最後一課。${M()}講咗一句說話，你一直記住。`,
+  opts:()=>[{t:st.mentor.trust>=55?mentorLine():"「如果命運是世上最爛的編劇，我就要做我人生最好的演員。」",sub:st.mentor.trust>=55?`${M()}望住你哋講`:"書院開學演出嘅一句對白",run(){apply({spirit:3,health:1,rel:2});addLog("你喺結業禮喊咗，跟住又笑返。");}}]},
  {id:"result",y:3,m:7,scene:"school",title:"放榜",
   text:()=>st.track==="DCA"?"七月，同屆嘅 DSE 放榜，你嘅 DCA 成績同升學結果都喺呢個月出。":"七月，文憑試放榜。你嘅三年，要喺呢一日見分曉。",
   opts:()=>[{t:st.track==="DCA"?"打開結果通知":"打開成績單",sub:"",run(){resolveOutcome();}}]},
@@ -1201,10 +1203,10 @@ const EVENTS=[
    {t:"全程投入，日日做到凌晨",sub:"審美、關係上升，健康下降",run(){apply({aes:4,rel:4,health:-4,spirit:1});st.works++;addLog("創作營最後一晚，你哋喺營地播晒所有作品，好多人喊。");}},
    {t:"做完份內就去休息",sub:"健康、精神上升",run(){apply({health:2,spirit:3,rel:1});addLog("你每晚準時瞓，聽住其他人喺隔籬房笑。");}}
   ]},
- {id:"fdaActor",y:2,m:7,scene:"camp",title:"「可唔可以幫我做演員？」",cond:()=>st.major!=="FVA"&&alive().some(q=>q.bond>=35),
-  text:()=>`「${evPeer("fdaActor",a=>a.slice().sort((x,y)=>y.bond-x.bond)[0]).nick}」專修電影與錄像（FVA）。FVA 創作營本身得 FVA 嘅同學去，但佢條片爭一個演員，問你肯唔肯入營幫手。`,
+ {id:"fdaActor",y:2,m:7,scene:"camp",title:"「可唔可以幫我做演員？」",cond:()=>st.major!=="FVA"&&alive().some(q=>q.major==="FVA"&&q.bond>=30),
+  text:()=>`「${evPeer("fdaActor",a=>a.filter(q=>q.major==="FVA").sort((x,y)=>y.bond-x.bond)[0]||a[0]).nick}」專修電影與錄像（FVA）。FVA 創作營本身得 FVA 嘅同學去，但佢條片爭一個演員，問你肯唔肯入營幫手。`,
   opts:()=>{const n=evPeer("fdaActor").nick;return [
-   O("去做演員",{rel:3,aes:2,health:-2,spirit:1},`你入咗營做「${n}」條片嘅演員。同一句對白講咗二十幾次，最後一晚放映，你喺銀幕見到自己。`,()=>bondWith(10,n),"同佢熟好多"),
+   O("去做演員",{rel:3,aes:2,health:-2,spirit:1},`你入咗營做「${n}」條片嘅演員。同一句對白講咗二十幾次，最後一晚放映，你喺銀幕見到自己。`,()=>{bondWith(10,n);remember(n,"多謝你入營做我條片嘅演員");},"同佢熟好多"),
    O("幫佢搵第二個",{rel:1},`你幫「${n}」問咗幾個人，最後有人肯去。`,()=>bondWith(2,n)),
    O("唔去",{},`你話唔得閒。「${n}」話冇所謂。`,()=>bondWith(-3,n))];}},
  {id:"dcacamp",y:3,m:1,scene:"camp",title:"DCA camp",cond:()=>st.track!=="DSE",
@@ -1236,7 +1238,7 @@ const TARGETS=[
 const targetName=k=>(TARGETS.find(t=>t.k===k)||{n:"未決定"}).n;
 function scores(){
   const s=st.s;
-  const port=s.aes*.65+Math.min(st.works,14)*1.6+st.awards.length*3+(st.flags.portfolio?5:0)+(st.flags.artReview?4:0)+(st.major&&st.aff[st.major]>30?3:0);
+  const port=s.aes*.65+Math.min(st.works,14)*1.6+st.awards.length*3+(st.flags.portfolio?5:0)+(st.flags.artReview?4:0)+(st.major&&st.aff[st.major]>30?3:0)+(st.flags.noRef?-3:(st.mentor.trust-50)/12);
   const dse=s.know*.82+s.spirit*.18+(st.track==="DSE"?4:st.track==="BOTH"?0:-40);
   const dca=s.aes*.5+s.spirit*.5;
   const money=st.p.fam.money+(st.flags.scholar?1:0)+(st.flags.saved?.5:0);
@@ -1357,12 +1359,132 @@ function peerTick(){
   if(alive().some(q=>q.bond>=70))apply({spirit:.3});
 }
 
+
+/* ============ 同學嘅故事線、Mentor、時間表 ============ */
+// 每條故事線三段，喺固定月份出現（at = 入學後第幾個月）。@ 會換成同學個花名。
+// 選項：[字, 你嘅變化, 紀錄, 熟咗幾多, 佢精神變化, 故事分數, 紀念冊留言]
+const ARCS={
+ band:{n:"夾 band",end:v=>v>=2?"隊 band 仲玩緊，上個月先出咗首歌":v>=0?"隊 band 畢業之後各有各忙":"隊 band 中五就散咗",beats:[
+  {at:4,scene:"stage",title:"「我想組 band」",text:"@話想組隊 band，喺 Band 房貼咗張招募，貼咗兩個星期都冇人撕。",opts:[
+   ["入 band 做鼓手",{rel:2,spirit:2,know:-1},"你入咗@隊 band。你唔識打鼓，佢話：「我都唔識彈結他。」",10,8,1,"多謝你做第一個入 band 嘅人"],
+   ["幫佢畫張靚啲嘅招募海報",{aes:2},"你幫@重新畫咗張海報。第二日有兩個人撕咗電話紙條。",5,4,1,""],
+   ["冇興趣",{},"你話你唔識樂器。@話冇所謂。",-2,-2,-1,""]]},
+  {at:15,scene:"stage",title:"第一次表演",text:"@隊 band 第一次喺創意大道表演。開場嗰陣，台下得七個人。",opts:[
+   ["企最前排",{spirit:2,rel:1},"你企喺最前排，由頭嗌到尾。唱到第三首，後面多咗成廿人。",8,10,1,"第一次表演，我淨係望到你"],
+   ["幫佢哋拍低",{aes:2},"你幫@隊 band 拍咗成場。佢睇返條片先知自己彈錯咗幾多。",5,5,1,""],
+   ["嗰日冇去",{know:1},"你留咗喺課室做功課。@之後冇提過嗰場表演。",-5,-6,-1,""]]},
+  {at:30,scene:"stage",title:"最後一場",text:"畢業前最後一場表演。@話之後各散東西，隊 band 應該唔玩喇。",opts:[
+   ["上台同佢唱最後一首",{spirit:3,rel:2},"@拉咗你上台。你走音，全場照樣跟住唱。",10,10,1,"最後一首歌，好彩有你走音陪我"],
+   ["喺台下睇到尾",{spirit:2},"你睇到尾，幫@執埋啲線先走。",5,5,0,""],
+   ["冇去",{},"你冇去。之後喺 IG 見到佢哋謝幕嘅相。",-6,-6,-1,""]]}]},
+ family:{n:"屋企唔支持",end:v=>v>=2?"屋企人終於去咗睇佢嘅畢業展":v>=0?"同屋企仲拗緊，但照做自己嘅嘢":"聽咗屋企話，冇再做創作",beats:[
+  {at:6,scene:"school",title:"「屋企叫我轉校」",text:"@話屋企人覺得讀藝術冇前途，叫佢中五轉返主流學校。",opts:[
+   ["聽佢講晒",{rel:1,spirit:-1},"你聽@講咗成個午飯時間，冇俾意見。佢話講完舒服咗。",7,8,1,""],
+   ["幫佢諗點同屋企講",{know:1,rel:1},"你哋列咗一張紙：畢業生去咗邊、學費幾多、佢想做乜。@話今晚試吓。",9,10,1,"嗰張紙我仲留喺銀包"],
+   ["「你屋企人都有道理」",{},"@望咗你一眼，話：「我以為你會明。」",-8,-8,-1,""]]},
+  {at:13,scene:"gallery",title:"開放日",text:"開放日，@屋企人第一次嚟書院睇佢嘅作品。佢緊張到不停執件作品個位。",opts:[
+   ["陪佢企喺作品隔籬",{rel:2},"你陪@企足成個下晝。佢阿爸睇完冇講嘢，但影咗張相。",8,10,1,"開放日多謝你陪我企"],
+   ["幫佢同屋企人介紹",{rel:1,aes:1},"你同@屋企人講件作品點樣做出嚟。佢阿媽問咗好多問題。",9,12,2,""],
+   ["行開，等佢哋自己傾",{},"你行開咗。之後@話嗰日冇人出聲，好尷尬。",-2,-4,0,""]]},
+  {at:27,scene:"school",title:"報邊科",text:"申請季。@屋企人要佢報商科，佢自己想報設計。",opts:[
+   ["陪佢執作品集",{aes:1,health:-1},"你陪@揀作品揀到夜晚。佢決定兩邊都報，設計放第一志願。",10,10,2,"陪我執作品集嗰晚，我會記住"],
+   ["叫佢兩樣都報",{know:1},"@話都係，至少有得揀。",4,4,1,""],
+   ["「呢啲你自己決定」",{},"@點咗頭，冇再問你。",-4,-5,-1,""]]}]},
+ money:{n:"返工幫補屋企",end:v=>v>=2?"攞到助學金，唔使再返夜班":v>=0?"仲係一路返工一路讀":"畢業前已經做緊全職",beats:[
+  {at:5,scene:"school",title:"上堂瞓覺",text:"@呢排成日上堂瞓著。你後來先知，佢每晚喺茶餐廳做到十一點。",opts:[
+   ["借筆記俾佢抄",{know:1,rel:1},"你影晒筆記俾@。佢話第一次有人冇問佢點解瞓覺。",8,6,1,"多謝你啲筆記，仲有冇問我點解"],
+   ["午飯同佢夾份食",{rel:2},"你話自己食唔晒，分咗一半俾@。之後變咗習慣。",9,8,1,""],
+   ["冇理",{},"你冇理。@俾老師叫咗出去傾。",-2,-4,-1,""]]},
+  {at:16,scene:"school",title:"想辭職",text:"@話想辭咗份工專心做作品，但屋企等錢使。",opts:[
+   ["陪佢搵社工問資助",{rel:1,spirit:-1},"你陪@去搵社工。原來學費減免之外，仲有活動津貼同獎學金可以申請。",10,12,2,"社工房門口嗰半個鐘，多謝你等"],
+   ["介紹輕鬆啲嘅兼職俾佢",{rel:1},"你問咗幾個人，幫@搵到份星期六先返嘅工。",7,8,1,""],
+   ["聽完就算",{},"你話「加油」。@笑咗吓。",-2,-3,0,""]]},
+  {at:26,scene:"school",title:"「我唔報大學」",text:"@話諗住畢業就出嚟做嘢，唔報大學喇。",opts:[
+   ["同佢睇埋獎學金資料先",{know:1},"你哋睇咗一晚資料。@話可以試報一間，唔得先算。",8,8,2,"你叫我試報一間。我試咗"],
+   ["「你想點我都撐你」",{rel:1},"@話多謝，話你係第一個冇勸佢嘅人。",7,6,0,""],
+   ["冇講嘢",{},"你唔知講乜好。",-2,-3,-1,""]]}]},
+ dream:{n:"想去外國讀",end:v=>v>=2?"收到外國學校嘅面試通知":v>=0?"今年冇報，話出年再試":"放棄咗出國，冇再提",beats:[
+  {at:7,scene:"studio",title:"日日練畫",text:"@話想去外國讀美術，每日放學都留喺工作室練畫。",opts:[
+   ["一齊練",{aes:2,health:-1},"你同@每日畫到保安趕人。你哋開始互相改畫。",9,6,1,"每日一齊畫到保安趕人，好掛住"],
+   ["介紹個識路嘅老師俾佢",{rel:1},"你帶@去搵一個幫過師兄師姐報海外嘅老師。",6,6,1,""],
+   ["笑佢諗多咗",{},"你話：「咁遠嘅嘢諗嚟做乜。」@冇答。",-8,-8,-1,""]]},
+  {at:18,scene:"studio",title:"俾人批到一文不值",text:"海外學校嚟書院做作品集評審，@俾人逐件批，行出嚟眼都紅埋。",opts:[
+   ["陪佢逐件再睇一次",{aes:2},"你哋將啲評語抄低，逐件諗點改。@話原來唔係件件都咁差。",9,12,2,"俾人批完嗰日，你陪我由頭睇多次"],
+   ["「我覺得你啲嘢好好」",{rel:1},"@話多謝，但你知佢冇聽入耳。",3,3,0,""],
+   ["呢幾日避開佢",{},"你唔知點安慰，索性避開。",-6,-6,-1,""]]},
+  {at:28,scene:"home",title:"面試前一晚",text:"面試前一晚十一點，@打俾你：「我可唔可以對住你練一次？」",opts:[
+   ["陪佢練到佢順為止",{health:-2,rel:1},"你扮考官問咗三次。第三次，@終於冇再講「對唔住」。",10,10,2,"面試前嗰晚嘅電話，多謝你聽"],
+   ["傳句「加油」",{},"你覆咗句加油就瞓。",1,1,0,""],
+   ["冇聽電話",{},"你瞓咗。第二朝先見到三個未接來電。",-6,-6,-1,""]]}]}
+};
+const arcPeer=k=>st.peers.find(q=>q.arc===k&&!q.left)||NOBODY;
+Object.entries(ARCS).forEach(([k,a])=>a.beats.forEach((b,j)=>{const id="arc_"+k+j;
+  EVMAP[id]={id,scene:b.scene,title:b.title,text:()=>b.text.replace(/@/g,`「${arcPeer(k).nick}」`),
+   opts:()=>{const q=arcPeer(k),n=q.nick;return b.opts.map(([t,fx,log,bd,ps,sc,mem])=>O(t,fx,log.replace(/@/g,`「${n}」`),()=>{if(q.fake)return;bondWith(bd,n);q.s.spirit=clamp(q.s.spirit+ps);q.arcN=(q.arcN||0)+sc;if(mem)q.mem.push(mem);},bd>=8?"同佢熟好多":bd>2?"同佢熟咗":bd<0?"同佢生疏咗":""));}};}));
+const remember=(nick,t)=>{const q=peerBy(nick);if(q&&q.mem&&!q.mem.includes(t))q.mem.push(t);};
+const peerTrack=q=>({DSE:"只讀 DSE",DCA:"只讀 DCA",BOTH:"DSE＋DCA"})[q.track];
+
+// Mentor：名同性格都係作出嚟，同名冊入面嘅真實教職員冇關
+const MENTORS=[{n:"阿Paul",subj:"設計與視覺傳意",ty:"loose"},{n:"Miss 何",subj:"中文",ty:"strict"},{n:"阿樂",subj:"表演藝術",ty:"friend"},{n:"Carmen",subj:"視覺藝術",ty:"friend"},{n:"阿Ben",subj:"數學",ty:"strict"},{n:"Yoyo",subj:"電影與錄像",ty:"loose"}];
+const MTYPE={loose:"放任型",strict:"緊張型",friend:"朋友型"};
+const M=()=>st.mentor.n;
+function trust(d){const m=st.mentor;m.trust=clamp(m.trust+d*(d>0?{loose:1,strict:.8,friend:1.2}[m.ty]:1));}
+const trustWord=()=>{const t=st.mentor.trust;return t>=70?"好信你":t>=45?"信你":t>=25?"仲觀望緊":"唔多信你";};
+const mentorLine=()=>({loose:"「我冇點管你哋，因為我信你哋識行。」",strict:"「我成日煩你哋，係驚你哋走漏眼。而家唔使驚喇。」",friend:"「畢咗業唔好再叫我 Mentor，叫我個名。」"})[st.mentor.ty];
+// 開新局同載入舊存檔都會行一次：補返同學嘅專修、路線、故事線同埋 Mentor
+function ensureWorld(s){
+  const ks=shuffle(Object.keys(ARCS));
+  s.peers.forEach((q,ix)=>{
+    if(!q.major){q.major=pick(AKEYS);q.track=wpick(["DSE","DCA","BOTH"],t=>({DSE:35,DCA:25,BOTH:40})[t]);}
+    if(!q.arc){q.arc=ks[ix%ks.length];q.arcN=0;}
+    if(!q.mem)q.mem=[];
+  });
+  if(!s.mentor){const m=pick(MENTORS);s.mentor={...m,trust:42+Math.round(rnd()*10)};s.mLeaveAt=rnd()<.12?12+Math.floor(rnd()*9):-1;}
+}
+// 時間表：每樣長期嘅嘢佔一格，超過三格就會頂唔順
+const CAP=3;
+const loads=()=>[st.job==="mcd"&&["麥當勞夜班",2,"job"],st.job==="teacher"&&["老師嘅助手",1,"job"],st.team&&[st.team,1,"team"],st.flags.catclub&&["貓舍義工",1,"cat"],st.partner&&["拍拖",1,"love"],st.track==="BOTH"&&["雙修",1,"both"]].filter(Boolean);
+const loadN=()=>loads().reduce((a,x)=>a+x[1],0);
+const loadText=()=>{const a=loads(),n=loadN();return a.length?`${a.map(x=>x[0]+(x[1]>1?"×2":"")).join("、")}：${n}／${CAP} 格${n>CAP?"（超出）":""}`:`0／${CAP} 格`;};
+EVMAP.overload={id:"overload",scene:"home",title:"時間唔夠用",
+  text:()=>`你個時間表逼爆咗：${loadText()}。上個星期你有兩日瞓唔夠四個鐘。要放低啲嘢，定係照頂？`,
+  opts:()=>loads().filter(x=>x[2]!=="both").map(([n,w,k])=>k==="love"
+    ?{t:"同另一半講要少啲見面",sub:"感情轉淡；精神稍升",run(){love(-12);apply({spirit:2,health:1});addLog(`你同${st.partner.name}講呢排要少啲見面。對方話明白，但靜咗好耐。`);}}
+    :{t:"放低："+n,sub:"騰返"+(w>1?"兩":"一")+"格時間",run(){if(k==="job")st.job=null;else if(k==="team")st.team=null;else st.flags.catclub=0;apply({spirit:2,health:1});addLog(k==="job"?"你辭咗份兼職。":k==="team"?`你退出咗${n}。教練話隨時歡迎你返嚟。`:"你同貓舍講呢排當唔到值。Yuki 冇意見。");}})
+   .concat([O("全部照做",{spirit:-3,health:-2,know:-1},"你話自己頂得順。")])};
+EVMAP.mentorTime={id:"mentorTime",scene:"school",title:()=>`${M()}搵你傾偈`,
+  text:()=>`Mentor Period 之後，${M()}留低你。${({loose:"佢平時好少主動搵人。",strict:"佢手上有張你嘅出席紀錄。",friend:"佢遞咗包薯片俾你。"})[st.mentor.ty]}「最近點？」`,
+  opts:()=>[
+   {t:"講真話",sub:"佢會信你多啲",run(){trust(8);flag("toldMentor");apply({spirit:st.s.spirit<40?5:2});addLog(st.s.spirit<40?`你同${M()}講咗呢排嘅事。佢冇打斷你，最後話：「下次唔使等我問。」`:`你同${M()}講咗最近做緊乜、煩緊乜。佢記低咗兩樣嘢。`);}},
+   O("「OK 啦」",{},`你話 OK。${M()}望咗你兩秒，話：「得，有嘢搵我。」`,()=>trust(-1)),
+   O("問返佢自己最近做緊乜",{aes:1},`${M()}講咗佢自己做緊嘅作品，講到打鐘。`,()=>trust(4))]};
+EVMAP.mentorRemember={id:"mentorRemember",scene:"school",title:()=>`${M()}記得`,
+  text:()=>st.p.fam.money<=1?`${M()}喺走廊截住你，塞咗張表俾你：「上次你講屋企嘅事。呢個津貼你啱申請，星期五前交俾我。」`:`${M()}喺走廊截住你，遞咗本書俾你：「上次你講嗰樣嘢，我諗起呢本。睇完再傾。」`,
+  opts:()=>st.p.fam.money<=1?[
+   {t:"填表交返",sub:"有錢；佢會信你多啲",run(){trust(4);money(1500);apply({spirit:2});addLog(`你填咗表。一個月後津貼批咗，有 $1,500。${M()}冇再提。`);}},
+   O("唔好意思攞",{spirit:-1},`你將張表摺埋放入書包。${M()}冇追問。`)]
+  :[O("睇完去搵佢傾",{aes:2,know:1},`你睇完本書去搵${M()}，傾咗一個鐘。`,()=>trust(5)),
+    O("放喺書包冇睇",{},"本書喺你書包住咗一個學期。",()=>trust(-2))]};
+const MFORGET={
+  text:()=>`${M()}應承幫你寫升學推薦信。聽日就係死線，佢仲未交。`,
+  opts:()=>[
+   O("禮貌咁提佢",{spirit:-1},`你傳咗個訊息。${M()}凌晨兩點覆：「寫緊。對唔住。」第二朝封信喺你枱面。`,()=>trust(3)),
+   O("搵科主任幫手催",{},`科主任一出聲，封信當日就有。${M()}之後見到你有啲尷尬。`,()=>trust(-8)),
+   O("算啦，唔要推薦信",{spirit:-2},"你冇再追。申請表嗰欄你留空咗。",()=>{st.flags.noRef=1;})]};
+EVMAP.mentorLeave={id:"mentorLeave",scene:"school",title:()=>`${M()}要走`,
+  text:()=>`${M()}喺 Mentor Period 宣佈，做埋今個月就離開書院。全班靜咗。`,
+  opts:()=>{const old=M(),nw=pick(MENTORS.filter(m=>m.n!==old)),swap=()=>{st.flags.oldMentor=old;st.mentor={...nw,trust:30};addLog(`新 Mentor 係${nw.n}（教${nw.subj}）。一切由頭嚟過。`,true);};return [
+   O("畫張卡俾佢",{spirit:1,rel:1},`你畫咗張卡俾${old}。佢話會帶去新地方。`,swap),
+   O("冇特別講嘢",{},`${old}最後一日，你同平時一樣講咗聲拜拜。`,swap)];}};
+
 /* ============ random events（每月最多一件） ============ */
 // once：成局只出一次；cd：出過之後要隔幾多個月先可以再出
 const R=(id,w,cond,o)=>({id,w,cond,once:1,...o});
 const RANDOM=[
  R("vape",2,()=>st.i>=2),R("weed",2,()=>st.i>=4),R("skip",2,()=>st.i>=2&&calMonth(st.i)!==8,{once:0,cd:7}),
  R("catJoin",3,()=>st.i>=1),R("catShift",4,()=>st.flags.catclub&&since("catclub")>=2,{once:0,cd:9}),
+ R("overload",8,()=>loadN()>CAP,{once:0,cd:4}),R("mentorTime",4,()=>st.i>=1&&calMonth(st.i)!==8,{once:0,cd:7}),
+ R("mentorRemember",6,()=>st.flags.toldMentor&&since("toldMentor")>=3),
  R("catFund",2,()=>st.i>=2,{once:0,cd:14}),R("catPhoto",2,()=>st.i>=4),
  R("clique",3,()=>st.s.rel>=72&&st.s.spirit>=60),R("gameclass",2,()=>st.s.spirit<58),R("gamble",2,()=>st.s.rel>=50),
  R("mcd",3,()=>st.money<500&&!st.job&&st.i>=6),R("schoolsmoke",4,()=>st.smoke,{once:0}),R("quitsmoke",2,()=>st.smoke&&st.i>=10),
@@ -1480,7 +1602,7 @@ EVMAP.pErs={id:"pErs",scene:"school",title:"「佢問我做咩唔退學」",
   text:()=>`小息，「${evPeer("pErs").nick}」塊面好黑。倫理與宗教堂之後，ERS 老師叫住佢，問咗一句：「你做咩唔退學？」佢問你：「係咪我真係唔應該喺度？」`,
   opts:()=>{const q=evPeer("pErs"),n=q.nick;return [
    O("「關佢咩事。」",{rel:2,spirit:1},`「${n}」笑咗出聲，話：「我頭先都想咁答。」佢冇再提退學。`,()=>bondWith(8,n),"同佢熟咗"),
-   O("陪佢去搵 Mentor 講",{rel:1,spirit:-1},`你陪「${n}」去搵 Mentor，由頭講咗一次。Mentor 話會跟進。「${n}」話，至少有人信佢。`,()=>{bondWith(11,n);q.s.spirit=clamp(q.s.spirit+12);},"同佢熟好多"),
+   O("陪佢去搵 Mentor 講",{rel:1,spirit:-1},`你陪「${n}」去搵 Mentor，由頭講咗一次。Mentor 話會跟進。「${n}」話，至少有人信佢。`,()=>{bondWith(11,n);q.s.spirit=clamp(q.s.spirit+12);remember(n,"ERS 嗰次，多謝你信我");},"同佢熟好多"),
    {t:"「你自己決定啦」",sub:"佢可能真係會走",run(){if(rnd()<.4){q.left=true;q.status="退咗學";apply({spirit:-2});addLog(`過咗兩個星期，「${n}」個位空咗。有人話佢答咗老師：「好，咁我退。」`,true,true);}else{bondWith(-3,n);addLog(`「${n}」點咗頭，之後冇再講。佢照返學。`);}}}];}};
 EVMAP.skip={id:"skip",scene:"school",title:"下晝連堂",
   text:()=>`食完晏，下晝係連堂${vary("skip",["數學","中文","英文","通識"])}。出面天氣好好。`,
@@ -1608,7 +1730,7 @@ EVMAP.cbJob={id:"cbJob",scene:"home",title:"兼職頂唔頂得順",
 EVMAP.pBorrow={id:"pBorrow",scene:"school",title:"借錢",
   text:()=>`小息，「${evPeer("pBorrow").nick}」拉你埋一邊：「可唔可以借 $200 俾我？下個月還。」（你銀包：${wallet()}）`,
   opts:()=>{const n=evPeer("pBorrow").nick;return [
-   {t:"借 $200",sub:st.money<200?"你自己都唔夠錢":"同佢熟咗；未必收得返",run(){if(st.money<200){apply({spirit:-1});addLog(`你想借，但自己都唔夠錢。「${n}」話唔緊要。`);return;}money(-200);bondWith(8,n);apply({rel:1});st.debt={n,i:st.i};addLog(`你借咗 $200 俾「${n}」。`);}},
+   {t:"借 $200",sub:st.money<200?"你自己都唔夠錢":"同佢熟咗；未必收得返",run(){if(st.money<200){apply({spirit:-1});addLog(`你想借，但自己都唔夠錢。「${n}」話唔緊要。`);return;}money(-200);bondWith(8,n);apply({rel:1});st.debt={n,i:st.i};remember(n,"爭你 $200，我記得㗎");addLog(`你借咗 $200 俾「${n}」。`);}},
    {t:"唔借，但請佢食餐飯（$60）",sub:"同佢熟咗少少；花錢",run(){spend(60);bondWith(5,n);apply({rel:1});addLog(`你話自己都緊，但請咗「${n}」食碟頭飯。佢食得好快。`);}},
    {t:"唔借",sub:"同佢生疏咗",run(){bondWith(-6,n);addLog(`你話唔方便。「${n}」話明白，之後幾日少咗搵你。`);}}];}};
 EVMAP.pHelp={id:"pHelp",scene:"studio",title:"幫唔幫手",
@@ -1626,7 +1748,7 @@ EVMAP.pFight={id:"pFight",scene:"school",title:"反面",
 EVMAP.pMakeup={id:"pMakeup",scene:"school",title:"紙仔",
   text:()=>`你個 locker 入面有張紙仔，係「${st.flags.feud}」嘅字：「上次嘅事，可唔可以傾吓？」`,
   opts:()=>{const n=st.flags.feud;return [
-   O("去搵佢",{spirit:3,rel:2},"你哋喺創意大道坐咗好耐，由嗌交嗰日講到中四第一日。好返喇。",()=>{bondWith(22,n);st.flags.feud=0;},"同佢和好"),
+   O("去搵佢",{spirit:3,rel:2},"你哋喺創意大道坐咗好耐，由嗌交嗰日講到中四第一日。好返喇。",()=>{bondWith(22,n);st.flags.feud=0;remember(n,"嗌完交仲肯同我傾，多謝");},"同佢和好"),
    O("當睇唔到",{spirit:-1},"你將張紙仔摺埋放入筆袋，冇覆。",()=>{bondWith(-8,n);st.flags.feud=0;})];}};
 EVMAP.pInvite={id:"pInvite",scene:"city",title:"約你",
   text:()=>`「${evPeer("pInvite").nick}」約你星期六${vary("pInvite",["上佢屋企打邊爐","去睇佢隊 band 表演","一齊去書展擺檔賣 zine","去海邊影日落"])}。`,
@@ -1637,7 +1759,7 @@ EVMAP.pInvite={id:"pInvite",scene:"city",title:"約你",
 EVMAP.pQuit={id:"pQuit",scene:"school",title:"「我想退學」",help:true,
   text:()=>`放學，「${evPeer("pQuit",a=>a.slice().sort((x,y)=>x.s.spirit-y.s.spirit)[0]).nick}」同你講：「我諗住退學。唔好同人講住。」`,
   opts:()=>{const q=evPeer("pQuit"),n=q.nick;const leave=()=>{q.left=true;q.status="退咗學";addLog(`「${n}」退咗學。`,false,true);};return [
-   O("聽佢講晒，再陪佢去見社工",{rel:2,spirit:-1},"你聽咗一個鐘。第二日你陪佢行到社工房門口，喺出面等。佢決定留低試多一個學期。",()=>{bondWith(14,n);q.s.spirit=clamp(q.s.spirit+18);},"同佢熟好多"),
+   O("聽佢講晒，再陪佢去見社工",{rel:2,spirit:-1},"你聽咗一個鐘。第二日你陪佢行到社工房門口，喺出面等。佢決定留低試多一個學期。",()=>{bondWith(14,n);q.s.spirit=clamp(q.s.spirit+18);remember(n,"多謝你嗰次陪我去見社工");},"同佢熟好多"),
    {t:"勸佢「捱埋佢啦」",sub:"未必聽得入耳",run(){if(rnd()<.5){bondWith(-6,n);apply({spirit:-2});addLog("佢點咗頭。兩個星期之後，佢個位空咗。");leave();}else{bondWith(3,n);addLog("佢話再諗吓。之後冇再提。");}}},
    {t:"「你想點都得，我支持你」",sub:"尊重佢嘅決定",run(){bondWith(6,n);if(rnd()<.6){apply({spirit:-1});addLog("佢走嗰日傳咗個訊息俾你：「多謝你冇勸我。」");leave();}else addLog("佢話講咗出嚟之後，反而冇咁想走。");}}];}};
 EVMAP.pFarewell={id:"pFarewell",scene:"school",title:"最後一日",
@@ -1844,10 +1966,10 @@ EVMAP.crisis={id:"crisis",scene:"home",title:"撐唔住",help:true,
    O("請假休息一個星期",{spirit:10,health:3.5,know:-2},"你請咗一個星期假。Mentor 傳訊息話：「好好休息，有咩事搵我。」"),
    O("繼續頂住",{spirit:-2,health:-1},"你話你冇事。")]};
 EVMAP.parent={id:"parent",scene:"school",title:"家長日",
-  text:()=>"欠交、遲到加埋，Mentor 約咗你同家長見面。",
-  opts:[
-   O("老實講出自己嘅困難",{spirit:4.5,rel:2},"你第一次喺家長面前講出自己點解做唔到。之後大家一齊訂咗個時間表。"),
-   O("話下次會改",{spirit:2},"你話下次會改。")]};
+  text:()=>`欠交、遲到加埋，${M()}約咗你同家長見面。${st.mentor.trust>=55?`${M()}一開口，先講你呢排做得好嘅地方。`:st.mentor.trust<30?`${M()}將你每一次遲到同欠交逐條讀出嚟。`:""}`,
+  opts:()=>[
+   O("老實講出自己嘅困難",{spirit:4.5,rel:2},"你第一次喺家長面前講出自己點解做唔到。之後大家一齊訂咗個時間表。",()=>trust(8)),
+   O("話下次會改",{spirit:2},"你話下次會改。",()=>trust(1))]};
 
 /* ============ quit / early endings ============ */
 const QUIT_REASONS=[
@@ -1859,6 +1981,9 @@ EVMAP.quit={id:"quit",scene:"home",title:"退學",help:true,
   opts:()=>QUIT_REASONS.map(([r])=>({t:r,sub:"確定退學",run(){endEarly("中途退學",`你決定退學。原因：${r}。`,r);}})).concat([{t:"算啦，繼續讀",sub:"返回遊戲",run(){addLog("你諗過退學，最後都係繼續返學。");}}])};
 function resolvePeers(){
   st.peers.forEach(q=>{if(q.outcome)return;if(q.left){q.outcome={cat:"其他",name:q.status};return;}
+    {const v=q.arcN||0;if(q.arc==="dream"||q.arc==="family"){q.s.aes=clamp(q.s.aes+v*4);q.s.know=clamp(q.s.know+v*3);}else q.s.spirit=clamp(q.s.spirit+v*5);
+     if(q.arc==="dream"&&v>=2&&rnd()<.6){q.outcome={cat:"學士學位",name:pick([DEST.uk(),DEST.japan()])};return;}
+     if(q.arc==="money"&&v<0&&rnd()<.6){q.outcome={cat:"工作",name:DEST.work()};return;}}
     const r=wpick(["學士學位","副學位","其他學習","工作","其他"],c=>({"學士學位":27*(q.s.know+q.s.aes)/110,"副學位":27,"其他學習":7.9,"工作":15.7,"其他":22.4*(100-q.s.spirit)/55})[c]);
     q.outcome={cat:r,name:{"學士學位":pick([DEST.taiwan(),DEST.jupas(),DEST.taiwan()]),"副學位":DEST.hd(),"其他學習":DEST.other(),"工作":DEST.work(),"其他":"休學一年"}[r]};});
 }
@@ -1881,7 +2006,7 @@ function startMonth(){
   if(st.last&&st.last.i<i-1)st.last=null;
   if(FOCUS_PROMPT[i]||!st.focus)st.queue.push({type:"focus"});
   EVENTS.filter(e=>e.y===y&&e.m===m&&!st.fired[e.id]&&(!e.cond||e.cond())).forEach(e=>push(e.id));
-  if(st.s.spirit<24&&!st.crisisY[y])push("crisis");
+  if(st.s.spirit<({strict:28,loose:21,friend:24})[st.mentor.ty]&&!st.crisisY[y])push("crisis");
   if(st.s.spirit<22&&!st.fired["parent"+y])push("parent");
   if(st.partner&&st.partner.love<20&&i-(st.cool.breakup??-9)>=3)push("breakup");
   else if(st.partner&&school&&i-(st.cool.date??-9)>=3&&rnd()<.45)push("date");
@@ -1891,6 +2016,8 @@ function startMonth(){
     const roll=p=>{const a=Math.max(i,6),n=31-a;if(n<=0||rnd()>=p*n/25)return -1;const k=a+Math.floor(rnd()*n);return k%12===11?k-1:k;};
     st.ersAt=roll(.25);st.pErsAt=roll(.125);if(st.pErsAt>=0&&st.pErsAt===st.ersAt)st.pErsAt+=st.pErsAt%12===10?-1:1;
   }
+  st.peers.forEach(q=>{if(q.left||!ARCS[q.arc])return;ARCS[q.arc].beats.forEach((b,j)=>{if(b.at===i&&!st.fired["arc_"+q.arc+j])push("arc_"+q.arc+j);});});
+  if(i===st.mLeaveAt&&!st.fired.mentorLeave)push("mentorLeave");
   if(i===st.ersAt&&!st.fired.ers&&(st.electives||[]).includes("倫理與宗教"))push("ers");
   if(i===st.pErsAt&&!st.fired.pErs&&alive().length)push("pErs");
   {const ok=RANDOM.filter(r=>!(r.once&&st.fired[r.id])&&(!r.cd||i-(st.cool[r.id]??-99)>=r.cd)&&r.cond());if(ok.length&&rnd()<.45)push(wpick(ok,r=>r.w).id);}
@@ -1990,12 +2117,14 @@ function endMonth(){
     // 出席：健康或者精神差就會缺席
     const ab=Math.max(0,Math.round((45-s.health)/14+(38-s.spirit)/14+rnd()*.8)-(st.flags.tryAttend?1:0));
     if(ab){st.absYear+=ab;st.absTotal+=ab;if(ab>=2)addLog(`今個月你缺席咗 ${ab} 日。`);}
+    trust(ab?-Math.min(3,ab):1);if(st.mentor.ty==="strict")apply({spirit:-.15});
     if(s.spirit<38&&rnd()<.5){apply({spirit:-1.5,know:-1});addLog(pick(["你又冇交功課。","CPOP 嘅進度報告你冇交。",st.track==="DCA"?"DCA 單元嘅反思報告你遲咗兩個星期都未交。":"DSE 練習卷擺咗喺書包兩個星期，冇開過。"]));}
     if(st.track==="BOTH")apply({spirit:-.6,health:-.2});
   }else{st.absYear=0;st.flags.tryAttend=0;}
   // 考試月
   if([1,6].includes(m)&&st.i<30){const v=st.focus==="rest"?-.5:-2;apply({spirit:v,health:v*.35});}
   if(m===4&&st.i>24)apply({spirit:-2,health:-.7});
+  {const ov=loadN()-CAP;if(ov>0){apply({spirit:-.7*ov,health:-.5*ov,know:-.4*ov});if(rnd()<.3)addLog(pick(["你喺巴士企住瞓著咗。","今個星期有三樣嘢撞期，你邊樣都做得唔好。","你唔記得咗自己應承過人乜。"]));}}
   if(st.team)apply(st.team==="辯論隊"?{aes:.6,know:.4,rel:.3,spirit:-.2}:{health:1.1,rel:.4,know:-.3});
   // 感情：唔花時間就會慢慢轉淡
   if(st.partner){const pt=st.partner;love(-1.5+({social:1,rest:1,study:-1,art:-1}[st.focus]||0)-(pt.sameSchool?0:.7));apply({spirit:pt.love>=60?.4:pt.love<35?-.4:0});}
@@ -2119,6 +2248,7 @@ function renderFacts(){
   $("#facts").innerHTML=factRows([
     ["住喺",`${p.dist}（單程 ${p.commute} 分鐘）`],["家境",p.fam.n],["學費",famTuition()],["父母",p.jobs.join("、")+(p.artsy?"（藝術家家庭）":"")],
     ["兄弟姊妹",p.sibN?p.sibN+" 個":"獨生"],["背景",p.bg?p.bg.n:"冇特別"],["性向",p.orient],["另一半",pt?`${pt.label} ${pt.name}（${loveWord()}）`:"單身"],
+    ["Mentor",`${M()}（${st.mentor.subj} · ${MTYPE[st.mentor.ty]}）· ${trustWord()}`],["時間表",loadText()],
     ["銀包",wallet()],["兼職",st.job==="teacher"?"老師嘅助手":st.job==="mcd"?"麥當勞夜班":"冇"],
     ["缺席（今個學年）",`${st.absYear} 日`],["遲到（今個學年）",`${st.lates} 次`],["黃紙",`${st.yellow} 張`],["PLI",st.pli||"未揀"],
     ["選修科",list(st.electives||[],"未揀")],["藝術工作室",list(st.studios,"—")],
@@ -2154,7 +2284,7 @@ $("#log").addEventListener("click",e=>{const li=e.target.closest("li");if(!li||!
 const dot=(c,t)=>`<div class="dot" style="background:var(${c})">${esc(t)}</div>`;
 function renderPeers(){
   const pt=st.partner;
-  $("#peers").innerHTML=st.peers.map(q=>`<div class="peer">${dot(q.color,q.nick[0])}<div><b>${esc(q.nick)}</b> <span style="font-size:12px;color:var(--muted)">${esc(q.name)}</span>${q.left?"":` <span class="chip">${bondWord(q.bond)}</span>`}<small>${esc(q.status)}${q.left?"":" · 重心："+FOCUS[q.focus].n}</small>${q.left?"":`<div class="bond"><i style="width:${q.bond}%"></i></div>`}</div></div>`).join("")
+  $("#peers").innerHTML=st.peers.map(q=>`<div class="peer">${dot(q.color,q.nick[0])}<div><b>${esc(q.nick)}</b> <span style="font-size:12px;color:var(--muted)">${esc(q.name)}</span>${q.left?"":` <span class="chip">${bondWord(q.bond)}</span>`}<small>${esc(q.status)}${q.left?"":" · 重心："+FOCUS[q.focus].n}${!q.left&&st.i>=10?`<br>專修 ${AREAS[q.major].s} · ${peerTrack(q)}`:""}${q.left||!(q.arcN||st.fired["arc_"+q.arc+"0"])?"":" · "+ARCS[q.arc].n}</small>${q.left?"":`<div class="bond"><i style="width:${q.bond}%"></i></div>`}</div></div>`).join("")
    +(pt?`<div class="peer">${dot("--pink","♥")}<div><b>${esc(pt.name)}</b> <span class="chip">${pt.label}</span><small>${pt.sameSchool?"同校":"唔同學校"} · 感情：${loveWord()}</small><div class="bond"><i style="width:${pt.love}%;background:var(--pink)"></i></div></div></div>`:"");
 }
 function renderMap(sel="#map"){
@@ -2300,21 +2430,21 @@ function drawScene(){
   for(let yy=0;yy<H;yy+=6)for(let xx=(yy/6)%2*3;xx<W;xx+=6){x.fillRect(xx,yy,1.4,1.4);}
   x.restore();
 }
-function drawAvatar(){
-  const c=$("#av");if(!c)return;const x=c.getContext("2d"),F=st.p.g==="F";
-  const P=css("--pink"),B=css("--blue"),bg=css("--pink-soft"),skin="#F6E3C8";
-  const dot=(X,Y,r)=>{x.beginPath();x.arc(X,Y,r,0,7);x.fill();};
-  x.globalCompositeOperation="source-over";x.clearRect(0,0,64,78);x.fillStyle=bg;x.fillRect(0,0,64,78);
-  // 後面嘅頭髮
+// 喺任何 canvas 上面畫一個頭像（原本大細 64×78，用 k 放大）
+function paintFace(x,g,ox,oy,k,P,B,bg){
+  const F=g==="F",skin="#F6E3C8",dot=(X,Y,r)=>{x.beginPath();x.arc(X,Y,r,0,7);x.fill();};
+  x.save();x.translate(ox,oy);x.scale(k,k);x.beginPath();x.rect(0,0,64,78);x.clip();
+  x.fillStyle=bg;x.fillRect(0,0,64,78);
   x.fillStyle=P;if(F){dot(32,31,18);x.fillRect(14,31,36,24);}else dot(32,30,14.5);
-  // 膊頭
   x.fillStyle=B;x.beginPath();x.moveTo(8,78);x.quadraticCurveTo(8,54,32,54);x.quadraticCurveTo(56,54,56,78);x.closePath();x.fill();
-  // 頸同塊面
   x.fillStyle=skin;x.fillRect(27,44,10,12);dot(32,33,13.5);
-  // 劉海
-  x.save();x.beginPath();x.arc(32,33,13.5,0,7);x.clip();x.fillStyle=P;
-  if(F){x.beginPath();x.ellipse(32,19,17,9,0,0,7);x.fill();}else{x.beginPath();x.ellipse(27,19,15,8,-.25,0,7);x.fill();}
+  x.beginPath();x.arc(32,33,13.5,0,7);x.clip();x.fillStyle=P;
+  x.beginPath();if(F)x.ellipse(32,19,17,9,0,0,7);else x.ellipse(27,19,15,8,-.25,0,7);x.fill();
   x.restore();
+}
+function drawAvatar(){
+  const c=$("#av");if(!c)return;const x=c.getContext("2d");
+  x.globalCompositeOperation="source-over";x.clearRect(0,0,64,78);paintFace(x,st.p.g,0,0,1,css("--pink"),css("--blue"),css("--pink-soft"));
 }
 
 /* ============ endings ============ */
@@ -2421,6 +2551,75 @@ function drawShare(dark){
   return c;
 }
 
+// 紀念冊：人同笑位為主，同成績表係兩張唔同嘅圖
+function ybTitle(){
+  const s=st.s;
+  return st.latesTotal>=60?"最有可能遲到自己個婚禮":st.yellow>=5?"最有可能出版《黃紙全集》":st.flags.ironking?"最有可能開鎖舖":st.flags.catclub?"Yuki 最鍾意嘅奴才"
+   :s.spirit<30?"最需要瞓返三年":st.absTotal===0?"保安都認得嘅人":st.works>=12?"最有可能住喺工作室":st.partner?"最有可能派喜帖俾全班"
+   :s.rel>=80?"全級都識嘅人":s.know>=75?"最有可能返嚟教書":"最有可能突然出現喺畢業展";
+}
+function ybQuote(){
+  const a=st.log.filter(l=>!l.peer&&l.x.startsWith("你")&&l.x.length>=12&&l.x.length<=46&&!/離開咗九龍聯合道/.test(l.x));
+  return a.length?a[(st.works*7+st.latesTotal+st.yellow*3)%a.length].x:"你行完咗呢三年。";
+}
+function drawYearbook(dark){
+  const c=document.createElement("canvas"),W=c.width=1080,x=c.getContext("2d"),o=st.outcome,early=o.k==="early";
+  const T=dark?{bg:"#0F1117",card:"#1F222C",ink:"#ECEDE8",mu:"#A0A4B4",ln:"#3A3E4C",soft:"#4A2440"}:{bg:"#ECEDE8",card:"#F8F8F4",ink:"#1D2340",mu:"#5F6476",ln:"#C7C9D1",soft:"#FFD3EC"};
+  const {ink,mu,ln}=T,pk="#FF48B0",bl="#0078BF",gr="#00A95C",ye="#FFE800",COL={"--pink":pk,"--blue":bl,"--green":gr};
+  const F=(w,s,f)=>{x.font=`${w} ${s}px ${f}`;},disp=`"Chiron Sung HK","Songti TC",serif`,body=`"Chiron Hei HK","PingFang TC",sans-serif`,mono=`"IBM Plex Mono",Menlo,monospace`;
+  const lines=(t,maxW,max)=>{const a=[];let line="";for(const ch of String(t)){if(x.measureText(line+ch).width>maxW){a.push(line);line=ch;}else line+=ch;}a.push(line);if(a.length>max){a.length=max;a[max-1]=a[max-1].slice(0,-1)+"…";}return a;};
+  const notes=[];st.peers.slice().sort((a,b)=>b.bond-a.bond).forEach(q=>{if(q.mem&&q.mem.length&&notes.length<3)notes.push([q.mem[q.mem.length-1],q.nick,COL[q.color]||pk]);});
+  if(st.mentor.trust>=60&&notes.length<4)notes.push([mentorLine().replace(/[「」]/g,""),st.mentor.n,ink]);
+  const f=st.flags,keeps=[f.tattoo&&"手腕個紋身",f.japanese&&"日文 N5",f.ironking&&"鐵尺王",f.turtleguard&&"龜池守護者",st.cosplay&&"cosplay："+st.cosplay,st.team,st.pli,st.yellow&&st.yellow+" 張黃紙",st.trips.length&&st.trips.length+" 次遊學",(f.catclub||st.fired.catJoin||st.fired.catPhoto||st.fired.catFund)&&"🐾 Yuki"].filter(Boolean);
+  const paint=()=>{
+    const H=c.height;x.textAlign="left";x.textBaseline="alphabetic";
+    x.fillStyle=T.bg;x.fillRect(0,0,W,H);
+    x.fillStyle=T.card;x.fillRect(50,50,W-100,H-100);x.strokeStyle=ink;x.lineWidth=4;x.strokeRect(50,50,W-100,H-100);
+    x.fillStyle=bl;x.fillRect(52,52,W-104,108);
+    x.fillStyle="#fff";x.textBaseline="middle";F(900,50,disp);x.fillText("書院人類 2029 畢業紀念冊",90,108);
+    F(600,24,mono);x.textAlign="right";x.fillText(`${st.mentor.n} 班`,W-90,108);x.textAlign="left";x.textBaseline="alphabetic";
+    // 你
+    paintFace(x,st.p.g,90,200,3.4,pk,bl,T.soft);x.strokeStyle=ink;x.lineWidth=3;x.strokeRect(90,200,217.6,265.2);
+    let y=258;const X=345,mw=W-90-X;
+    x.fillStyle=ink;F(900,58,disp);lines(`${st.p.name}「${st.p.nick}」`,mw,2).forEach(t=>{x.fillText(t,X,y);y+=68;});
+    y-=14;x.fillStyle=mu;F(400,28,body);x.fillText(`${st.major?AREAS[st.major].n:"未揀專修"} · ${trackName()}`,X,y);y+=46;
+    x.fillStyle=ink;F(600,30,body);lines((early?o.name+"："+o.detail:o.name),mw,2).forEach(t=>{x.fillText(t,X,y);y+=40;});
+    if(!early&&st.track!=="DSE"){x.fillStyle=mu;F(400,28,body);x.fillText(lines(`畢業創作《${st.gp||"無題"}》`,mw,1)[0],X,y+4);y+=44;}
+    y=Math.max(y,200+265)+50;
+    F(800,36,body);const tt=lines(ybTitle(),W-230,1)[0],cw=x.measureText(tt).width+48;x.fillStyle=ye;x.fillRect(90,y-44,cw,64);x.fillStyle="#1D2340";x.fillText(tt,114,y);
+    y+=70;
+    F(600,32,disp);const ql=lines("「"+ybQuote()+"」",W-230,3);x.fillStyle=pk;x.fillRect(90,y-30,8,ql.length*46);x.fillStyle=ink;ql.forEach((t,j)=>x.fillText(t,120,y+j*46));
+    y+=ql.length*46+34;
+    // 同班同學
+    x.fillStyle=ink;x.fillRect(90,y,W-180,3);y+=50;x.fillStyle=mu;F(600,24,mono);x.fillText("同一個 Mentor 班",90,y);y+=30;
+    st.peers.forEach(q=>{
+      const col=COL[q.color]||pk;paintFace(x,q.g,90,y,1.5,col,q.left?ln:ink,T.soft);
+      if(q.left){x.fillStyle=T.card;x.globalAlpha=.55;x.fillRect(90,y,96,117);x.globalAlpha=1;}
+      const X2=210;x.fillStyle=ink;F(800,32,body);x.fillText(q.nick,X2,y+34);const nw=x.measureText(q.nick).width;
+      x.fillStyle=mu;F(400,24,body);x.fillText(`${q.name}${q.left?"":" · "+AREAS[q.major].s+" · "+peerTrack(q)}`,X2+nw+16,y+34);
+      x.fillStyle=ink;F(600,26,body);x.fillText(lines(q.outcome?q.outcome.name:q.status,W-90-X2,1)[0],X2,y+74);
+      x.fillStyle=mu;F(400,25,body);x.fillText(lines(q.left?`${bondWord(q.bond)} · 冇一齊行到最後`:`${bondWord(q.bond)} · ${ARCS[q.arc].end(q.arcN||0)}`,W-90-X2,1)[0],X2,y+110);
+      y+=140;
+    });
+    // 留言
+    if(notes.length){
+      y+=6;x.fillStyle=ink;x.fillRect(90,y,W-180,3);y+=50;x.fillStyle=mu;F(600,24,mono);x.fillText("留言",90,y);y+=50;
+      notes.forEach(([t,who,col],j)=>{x.save();x.translate(110+(j%2)*50,y);x.rotate((j%2?1:-1)*.012);F(600,34,disp);x.fillStyle=col;const ls=lines(t,W-340,2);ls.forEach((l,k)=>x.fillText(l,0,k*44));F(400,24,body);x.fillStyle=mu;x.fillText("—— "+who,20,ls.length*44-4);x.restore();y+=ls.length*44+52;});
+    }
+    // 帶走嘅嘢
+    if(keeps.length){
+      y+=4;x.fillStyle=ink;x.fillRect(90,y,W-180,3);y+=56;F(600,25,body);let X3=90;
+      keeps.forEach(t=>{const w=x.measureText(t).width+32;if(X3+w>W-90){X3=90;y+=58;}x.strokeStyle=ink;x.lineWidth=2;x.strokeRect(X3,y-32,w,46);x.fillStyle=ink;x.fillText(t,X3+16,y);X3+=w+12;});
+      y+=30;
+    }
+    return y;
+  };
+  c.height=4200;const end=paint();c.height=Math.max(1350,Math.ceil(end)+140);paint();
+  const H=c.height;x.fillStyle=mu;F(400,24,body);x.fillText("非官方模擬遊戲 · 角色同事件均屬虛構",90,H-84);
+  x.fillStyle=ink;F(600,26,mono);x.textAlign="right";x.fillText(SITE,W-90,H-84);x.textAlign="left";
+  return c;
+}
+
 /* ============ end screen ============ */
 const CATS=[["學士學位",27,"--blue"],["副學位",27,"--pink"],["其他學習",7.9,"--green"],["工作",15.7,"--yellow"],["其他",22.4,"--line"]];
 function renderEnd(){
@@ -2438,9 +2637,9 @@ function renderEnd(){
     <div class="facts">${factRows([["遊學",list(st.trips)],["實習",list(st.interns)],["獎項",list(st.awards)],["選修科",list(st.electives||[])],["藝術工作室",list(st.studios)],["中文 Lecture",st.lecture||"—"],["English",st.english||"—"],["數學",st.maths||"—"],["三年遲到",st.latesTotal+" 次"],["三年缺席",st.absTotal+" 日"],["黃紙",st.yellow+" 張"],["PLI",st.pli||"—"],["陸運會 cosplay",st.cosplay||"—"],["校隊",st.team||"冇"],["路線",trackName()],["最後嘅狀態",STATK.map(([k,n])=>n+" "+Math.round(st.s[k])).join(" · ")]])}</div>
     ${epi.length?`<ul class="epi">${epi.map(t=>`<li>${esc(t)}</li>`).join("")}</ul>`:""}
    </section>
-   <section><h3>結果圖</h3>
+   <section><h3>結果圖</h3><p style="margin:0;font-size:13px;color:var(--muted)">有兩張：成績表同畢業紀念冊。</p>
     <img class="shareimg" id="shareImg" alt="你嘅三年結果圖">
-    <div class="endbtns"><button type="button" class="btn primary" id="shareBtn">儲存／分享結果圖</button><button type="button" class="btn" id="shareTheme" aria-pressed="false"></button><button type="button" class="btn" id="copyRec">複製三年紀錄</button></div>
+    <div class="endbtns"><button type="button" class="btn primary" id="shareBtn">儲存／分享結果圖</button><button type="button" class="btn" id="shareKind"></button><button type="button" class="btn" id="shareTheme" aria-pressed="false"></button><button type="button" class="btn" id="copyRec">複製三年紀錄</button></div>
     <p style="margin:0;font-size:13px;color:var(--muted)">儲存唔到嘅話，長按（或者右撳）張圖都得。</p>
    </section>
    <section><h3>三年地圖</h3><div class="maplabels" id="map2"></div></section>
@@ -2448,7 +2647,7 @@ function renderEnd(){
     <p style="margin:0;font-size:14px;color:var(--muted)">2024/25 年書院中六畢業生嘅出路比例。粉紅框係你喺嘅嗰一格。</p>
     <div class="dist">${CATS.map(([n,p,c])=>`<div class="${n===o.cat?"me":""}" style="width:${p}%;background:${tint(c)};color:var(--ink)">${p>9?n+" "+p+"%":p+"%"}</div>`).join("")}</div>
     <div class="legend">${CATS.map(([n,p,c])=>`<span style="--c:${tint(c)}">${n} ${p}%</span>`).join("")}</div>
-    <div>${st.peers.map(q=>`<div class="peer">${dot(q.color,q.nick[0])}<div><b>${esc(q.nick)}</b> <span class="chip">${q.outcome?q.outcome.cat:"—"}</span><small>${esc(q.outcome?q.outcome.name:"")}</small></div></div>`).join("")}</div>
+    <div>${st.peers.map(q=>`<div class="peer">${dot(q.color,q.nick[0])}<div><b>${esc(q.nick)}</b> <span class="chip">${q.outcome?q.outcome.cat:"—"}</span><small>${esc(q.outcome?q.outcome.name:"")}${q.left?"":" · "+esc(ARCS[q.arc].end(q.arcN||0))}</small></div></div>`).join("")}</div>
     <p style="margin:0;font-size:13px;color:var(--muted)">「其他」包括休學一年、未確定去向等。近年更多同學選擇用一年時間探索，才繼續學業。（周年報告 2024/25）</p>
    </section>
    <section>${endingsHTML(st.newEnd?endKey():"")}</section>
@@ -2464,7 +2663,9 @@ function renderEnd(){
   renderMap("#map2");
   let shot=null;
   let shareDark=!!store.get("hksc140-sharedark");
-  const paint=()=>{if(st&&st.phase==="end"&&$("#shareImg")){shot=drawShare(shareDark);$("#shareImg").src=shot.toDataURL("image/png");const b=$("#shareTheme");b.textContent=shareDark?"張圖轉淺色":"張圖轉深色";b.setAttribute("aria-pressed",shareDark);}};
+  let shareYb=false;
+  $("#shareKind").onclick=()=>{shareYb=!shareYb;paint();};
+  const paint=()=>{if(st&&st.phase==="end"&&$("#shareImg")){shot=(shareYb?drawYearbook:drawShare)(shareDark);$("#shareKind").textContent=shareYb?"睇成績表":"睇紀念冊";$("#shareImg").src=shot.toDataURL("image/png");const b=$("#shareTheme");b.textContent=shareDark?"張圖轉淺色":"張圖轉深色";b.setAttribute("aria-pressed",shareDark);}};
   $("#shareTheme").onclick=()=>{shareDark=!shareDark;store.set("hksc140-sharedark",shareDark);paint();};
   paint();if(document.fonts&&document.fonts.ready)document.fonts.ready.then(paint);
   $("#shareBtn").onclick=()=>shot.toBlob(async blob=>{
@@ -2504,7 +2705,7 @@ function upgrade(s){
 }
 function checkResume(){const s=upgrade(store.get(SAVE));$("#resumeBtn").hidden=!(s&&(s.phase==="play"||s.phase==="end"));$("#endingsIntro").innerHTML=endingsHTML();$("#achvIntro").innerHTML=achvHTML();}
 function resume(data){
-  st=data;st.paused=true;st._ep={};
+  st=data;st.paused=true;st._ep={};ensureWorld(st);
   if(st.phase==="end"){show("end");renderEnd();return;}
   if(st.phase==="card"){show("card");renderCard();return;}
   show("play");setTab("home");renderAll();startLoop();toast("已經載入，撳 ▶ 繼續。");
@@ -2549,7 +2750,7 @@ $$("[data-pref]").forEach(b=>b.onclick=()=>togglePref(b.dataset.pref));
 // 開始頁計數：開咗呢頁之後，562 個學生合共喺學校過咗幾多秒
 const t0=Date.now();setInterval(()=>{const el=$("#cntSec");if(el)el.textContent=Math.floor((Date.now()-t0)/1000*562).toLocaleString("zh-HK");},250);
 // 測試用：網址加 ?debug 先會開
-if(/[?&]debug/.test(location.search))window.__hksc={get st(){return st;},upgrade,grantAchv,blank,save,set tune(v){[DRAIN,OVER,REBOUND]=v;},EVMAP,RANDOM,DAILY,EVENTS,getOpts,val,choose,chooseFocus,skipToNext,newGame,startMonth,finishGame,show,renderAll,renderEnd,mkPartner,flag};
+if(/[?&]debug/.test(location.search))window.__hksc={get st(){return st;},upgrade,grantAchv,blank,save,set tune(v){[DRAIN,OVER,REBOUND]=v;},EVMAP,RANDOM,DAILY,EVENTS,getOpts,val,choose,chooseFocus,skipToNext,newGame,startMonth,finishGame,show,renderAll,renderEnd,mkPartner,flag,ARCS,loadN,trust,ensureWorld,drawYearbook};
 
 /* hot reload */
 window.claude?.hot?.snapshot?.(()=>({st}));
