@@ -57,10 +57,11 @@ h1,h2,h3{text-wrap:balance;margin:0}
 .label{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-family:var(--f-mono)}
 .wrap{max-width:1240px;margin:0 auto}
 .btn{border:2px solid var(--ink);background:transparent;padding:8px 16px;border-radius:2px;font-weight:600}
-.btn:hover{background:var(--ink);color:var(--paper)}
+@media (hover:hover){.btn:hover{background:var(--ink);color:var(--paper)}}
 .btn.primary{background:var(--pink);border-color:var(--pink);color:#fff}
 .btn.primary:hover{filter:brightness(1.05);background:var(--pink);color:#fff}
 .btn.small{padding:4px 10px;font-size:13px;border-width:1.5px}
+.topbtns{display:flex;gap:6px;flex-wrap:wrap}
 .chip{display:inline-block;padding:1px 8px;border-radius:999px;font-size:12px;border:1px solid var(--line);white-space:nowrap}
 
 /* ---------- intro ---------- */
@@ -325,6 +326,8 @@ details.fact summary{cursor:pointer;font-family:var(--f-mono);font-size:12px;let
   .enrol .startrow .btn{flex:1;min-height:48px;padding:10px 8px}
   .toast{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
   .btn{min-height:44px}
+  .topbtns{flex-wrap:nowrap;gap:4px;width:100%}
+  .topbtns .btn.small{flex:1 1 auto;padding:4px 5px;font-size:min(13px,3.3vw);white-space:nowrap}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 :root[data-calm] *{transition:none!important;animation:none!important}
@@ -337,7 +340,7 @@ details.fact summary{cursor:pointer;font-family:var(--f-mono);font-size:12px;let
 <section id="intro">
   <div class="topline">
     <span class="label">非官方模擬 · 根據學校周年報告、發展計劃及官網資料</span>
-    <span style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn small" type="button" data-pref="big">大字</button><button class="btn small" type="button" data-pref="calm">減少動態</button><button class="btn small" id="sndBtn1" type="button">音效</button><button class="btn small" id="themeBtn1" type="button">◐ 深淺色</button></span>
+    <span class="topbtns"><button class="btn small" type="button" data-pref="big">大字</button><button class="btn small" type="button" data-pref="calm">減少動態</button><button class="btn small" id="sndBtn1" type="button">音效</button><button class="btn small" id="themeBtn1" type="button">◐ 深淺色</button></span>
   </div>
   <div class="hero">
     <div>
@@ -570,8 +573,8 @@ const NICK="豆腐 意粉 菠蘿 茶包 阿星 細貓 墨魚 雞蛋仔 蘑菇 �
 const DIST=[["黃大仙",15],["深水埗",25],["九龍城",15],["觀塘",30],["沙田",30],["將軍澳",40],["大埔",40],["荃灣",40],["葵青",35],["港島東",45],["南區",50],["屯門",70],["元朗",65],["天水圍",75],["東涌",70],["南丫島",85]];
 const AREAS={
   DVC:{n:"設計與視覺傳意",s:"DVC",c:"--pink",field:"設計／視覺傳意"},
-  FVA:{n:"電影與錄像",s:"FDA",c:"--blue",field:"電影／媒體"},
-  SS:{n:"空間研習",s:"ESS",c:"--green",field:"建築／室內／空間設計"},
+  FVA:{n:"電影與錄像",s:"FVA",c:"--blue",field:"電影／媒體"},
+  SS:{n:"空間研習",s:"SS",c:"--green",field:"建築／室內／空間設計"},
   PA:{n:"表演藝術",s:"PA",c:"--pink",field:"戲劇／舞蹈"},
   MSA:{n:"音樂與聲音藝術",s:"MSA",c:"--blue",field:"音樂／聲音藝術"}
 };
@@ -1192,14 +1195,14 @@ const EVENTS=[
    {t:"陪佢哋去，自己唔紋",sub:"關係稍升",run(){apply({rel:2});addLog("你陪朋友紋身，幫佢哋影相。");}},
    {t:"唔去",sub:"關係稍降",run(){apply({rel:-1});addLog("你冇去。之後群組成日講起嗰日。");}}
   ]},
- {id:"fda",y:2,m:7,scene:"camp",title:"FDA 創作營",cond:()=>st.major==="FVA",
-  text:()=>"暑假前，電影與錄像（FDA）專修嘅創作營。幾日幾夜同一班人困喺營地拍嘢、剪片。",
+ {id:"fda",y:2,m:7,scene:"camp",title:"FVA 創作營",cond:()=>st.major==="FVA",
+  text:()=>"暑假前，電影與錄像（FVA）專修嘅創作營。幾日幾夜同一班人困喺營地拍嘢、剪片。",
   opts:[
    {t:"全程投入，日日做到凌晨",sub:"審美、關係上升，健康下降",run(){apply({aes:4,rel:4,health:-4,spirit:1});st.works++;addLog("創作營最後一晚，你哋喺營地播晒所有作品，好多人喊。");}},
    {t:"做完份內就去休息",sub:"健康、精神上升",run(){apply({health:2,spirit:3,rel:1});addLog("你每晚準時瞓，聽住其他人喺隔籬房笑。");}}
   ]},
  {id:"fdaActor",y:2,m:7,scene:"camp",title:"「可唔可以幫我做演員？」",cond:()=>st.major!=="FVA"&&alive().some(q=>q.bond>=35),
-  text:()=>`「${evPeer("fdaActor",a=>a.slice().sort((x,y)=>y.bond-x.bond)[0]).nick}」專修電影與錄像（FDA）。FDA 創作營本身得 FDA 嘅同學去，但佢條片爭一個演員，問你肯唔肯入營幫手。`,
+  text:()=>`「${evPeer("fdaActor",a=>a.slice().sort((x,y)=>y.bond-x.bond)[0]).nick}」專修電影與錄像（FVA）。FVA 創作營本身得 FVA 嘅同學去，但佢條片爭一個演員，問你肯唔肯入營幫手。`,
   opts:()=>{const n=evPeer("fdaActor").nick;return [
    O("去做演員",{rel:3,aes:2,health:-2,spirit:1},`你入咗營做「${n}」條片嘅演員。同一句對白講咗二十幾次，最後一晚放映，你喺銀幕見到自己。`,()=>bondWith(10,n),"同佢熟好多"),
    O("幫佢搵第二個",{rel:1},`你幫「${n}」問咗幾個人，最後有人肯去。`,()=>bondWith(2,n)),
@@ -1484,29 +1487,29 @@ EVMAP.skip={id:"skip",scene:"school",title:"下晝連堂",
   opts:[
    {t:"走堂",sub:"審美、精神上升，知識下降；缺席一日",run(){apply({aes:2,spirit:1,know:-2});st.absYear++;st.absTotal++;addLog("你走咗下晝堂，一個人去咗海邊。過咗一日。");}},
    O("返去上堂",{know:1},"你返咗課室，望住個窗上完兩堂。")]};
-EVMAP.catJoin={id:"catJoin",scene:"school",title:"貓社招人",
-  text:()=>"貓社（書院貓舍）貼咗張招募：搵同學輪更餵貓、鏟屎、影相。而家住喺度嘅係暫託貓 Yuki，一隻奶牛貓。",
+EVMAP.catJoin={id:"catJoin",scene:"school",title:"貓舍招人",
+  text:()=>"書院貓舍貼咗張招募：搵同學輪更餵貓、鏟屎、影相。而家住喺度嘅係暫託貓 Yuki，一隻奶牛貓。",
   fact:"書院貓舍 2023 年成立，由同學與社工攜手營運，主要靠自負盈虧模式，為貓貓賺罐罐。現任小主人係暫託貓 Yuki。（書院貓舍 Instagram @hksccat_home）",
   opts:[
-   O("報名做貓社義工",{spirit:2,rel:2},"你入咗貓社。第一日學鏟屎，Yuki 坐喺隔籬監工。",()=>flag("catclub"),"之後要輪更"),
+   O("報名做貓舍義工",{spirit:2,rel:2},"你入咗貓舍。第一日學鏟屎，Yuki 坐喺隔籬監工。",()=>flag("catclub"),"之後要輪更"),
    O("淨係入去摸吓 Yuki",{spirit:2},"你入去摸咗 Yuki 十分鐘，出返嚟成身貓毛。"),
    O("你對貓毛敏感",{},"你隔住塊玻璃同 Yuki 打咗個招呼。")]};
-EVMAP.catShift={id:"catShift",scene:"school",title:"貓社：輪到你當值",
+EVMAP.catShift={id:"catShift",scene:"school",title:"貓舍：輪到你當值",
   text:()=>`今個星期輪到你當值：${vary("catShift",["假期都要返書院餵 Yuki","要幫 Yuki 剪指甲","要洗晒貓舍啲兜同執貓砂"])}。`,
   opts:()=>[
    O("準時去",{spirit:2,health:1},"你做晒要做嘅嘢。Yuki 食完罐罐，喺你隻鞋上面瞓著咗。"),
    O("搵同學調更",{rel:1},()=>`「${bondWith(3)}」幫你頂咗更，條件係下次你幫返佢。`),
    O("唔記得咗",{spirit:-2,rel:-1},"你唔記得咗。社工幫你餵咗，之後喺群組提大家記得睇更表。")]};
-EVMAP.catFund={id:"catFund",scene:"gallery",title:"貓社擺檔",
-  text:()=>`貓社喺創意大道擺檔，賣 Yuki 嘅${vary("catFund",["貼紙","明信片","匙扣"])}，幫佢賺罐罐。（銀包：${wallet()}）`,
+EVMAP.catFund={id:"catFund",scene:"gallery",title:"貓舍擺檔",
+  text:()=>`貓舍喺創意大道擺檔，賣 Yuki 嘅${vary("catFund",["貼紙","明信片","匙扣"])}，幫佢賺罐罐。（銀包：${wallet()}）`,
   opts:()=>[
    {t:"買一份（$30）",sub:st.money<30?"錢唔夠":"精神上升；花錢",run(){if(st.money<30){addLog("你數吓個銀包，話下次先。");return;}money(-30);apply({spirit:1});addLog("你買咗一份，貼咗喺個 locker 門。");}},
    O("幫手畫一款新嘅",{aes:2,rel:1},"你畫咗一款 Yuki 伸懶腰嘅貼紙。下次擺檔，佢賣得最快。",()=>{st.works++;}),
    O("行過睇吓",{},"你行過檔口，同相入面嘅 Yuki 對望咗一陣。")]};
 EVMAP.catPhoto={id:"catPhoto",scene:"school",title:"奴才攝影",
-  text:()=>"貓社個 IG 徵集「奴才攝影作品」：同學影 Yuki 嘅相，揀中嘅會出帖。",
+  text:()=>"貓舍個 IG 徵集「奴才攝影作品」：同學影 Yuki 嘅相，揀中嘅會出帖。",
   opts:[
-   O("認真影一輯",{aes:2,spirit:1},"你蹲喺貓舍影咗成個午飯時間。Yuki 得一張肯望鏡頭，啱啱好係最靚嗰張。貓社出咗帖。",()=>{st.works++;}),
+   O("認真影一輯",{aes:2,spirit:1},"你蹲喺貓舍影咗成個午飯時間。Yuki 得一張肯望鏡頭，啱啱好係最靚嗰張。貓舍出咗帖。",()=>{st.works++;}),
    O("用電話影張就算",{spirit:1},"你影咗張矇嘅，自己留低做 wallpaper。"),
    O("冇興趣",{},"你冇投稿。")]};
 EVMAP.clique={id:"clique",scene:"school",title:"小圈子",
@@ -1815,7 +1818,7 @@ const AFTER=[
  {t:"喺放映室睇戲",c:0,fx:{aes:2},l:"你喺放映室睇咗一套圖書館收藏嘅舊電影。"},
  {t:"喺教員室煮嘢食",c:0,fx:{rel:2},l:"你同幾個老師喺教員室煮公仔麵，傾咗好多升學嘅嘢。"},
  {t:"去龜池餵龜",c:0,fx:{spirit:2,health:1},l:"你去龜池餵龜。隻龜望住你，好似明白晒。"},
- {t:"去貓社摸 Yuki",c:0,fx:{health:1,spirit:2},l:()=>pick(["你去貓社摸 Yuki。佢今日肯俾你摸足十分鐘。","Yuki 喺貓社瞓緊晏覺。你坐喺隔籬做功課，佢隻腳搭咗喺你本簿度。","你去貓社搵 Yuki。隻奶牛貓望咗你一眼，轉身用個背脊對住你。你照摸。"])},
+ {t:"去貓舍摸 Yuki",c:0,fx:{health:1,spirit:2},l:()=>pick(["你去貓舍摸 Yuki。佢今日肯俾你摸足十分鐘。","Yuki 喺貓舍瞓緊晏覺。你坐喺隔籬做功課，佢隻腳搭咗喺你本簿度。","你去貓舍搵 Yuki。隻奶牛貓望咗你一眼，轉身用個背脊對住你。你照摸。"])},
  {t:"喺創意大道聽人夾 band",c:0,fx:{aes:1,spirit:2},l:"放學有人喺創意大道夾 band。你坐喺樓梯聽到收檔。"},
  {t:"留到六點唔肯走，直到老師趕人",c:0,fx:{aes:2,rel:1},l:"你喺工作室留到六點，老師嚟趕人先肯走。過咗一日。"},
  {t:"做 work 做通宵",c:0,fx:{aes:3,health:-3},l:"你做 work 做到天光。"},
