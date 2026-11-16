@@ -2199,13 +2199,15 @@ function renderCard(){
     <div class="startrow"><button class="btn primary" id="beginBtn" type="button">開始呢三年</button><button class="btn" id="rerollBtn" type="button">再抽過</button></div>
    </div></div>`;
   $("#beginBtn").onclick=()=>{snd.play("bell");st.phase="play";startMonth();show("play");setTab("home");renderAll();save();startLoop();};
-  $("#rerollBtn").onclick=()=>{newGame(st.len);renderCard();rollAnim();};
+  $("#rerollBtn").onclick=()=>{const open=$("#card details").open;newGame(st.len);renderCard();$("#card details").open=open;rollAnim(true);};
 }
 // 抽人生：名同六格主要資料逐格停低
-function rollAnim(){
-  window.scrollTo(0,0);
+// 再抽嗰陣（stay）唔跳返上頂；打開咗「睇多啲資料」就連嗰度同四個同學都一齊轉，喺卡底都睇到
+function rollAnim(stay){
+  if(!stay)window.scrollTo(0,0);
   if(calm())return;
-  const els=$$("#card h2, #kvMain b");if(!els.length)return;
+  const els=$$("#card h2, #kvMain b"+($("#card details").open?", #card details .kv b, #card .peers-mini b":""));if(!els.length)return;
+  const step=Math.min(190,1700/els.length);
   const fin=els.map(e=>e.textContent),pool=fin.concat(["荃灣","屯門","沙田","深水埗","黑社會背景","藝術家","獨生","綜援","家境寬裕","外校新生","原校升讀","單身","有男朋友","有女朋友"]);
   const btns=$$("#card .startrow button");btns.forEach(b=>b.disabled=true);
   els.forEach(e=>e.classList.add("rolling"));
@@ -2214,7 +2216,7 @@ function rollAnim(){
     const t=Date.now()-t0;let left=0;
     els.forEach((e,i)=>{
       if(!e.classList.contains("rolling"))return;
-      if(t>450+i*190){e.textContent=fin[i];e.classList.replace("rolling","landed");snd.play("click");}
+      if(t>450+i*step){e.textContent=fin[i];e.classList.replace("rolling","landed");snd.play("click");}
       else{left++;e.textContent=pick(pool);}
     });
     if(!left){clearInterval(iv);btns.forEach(b=>b.disabled=false);}
