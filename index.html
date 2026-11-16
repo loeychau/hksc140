@@ -1079,7 +1079,11 @@ const EVENTS=[
    {t:"去",sub:"審美大升，精神上升，知識下降",run(){st.trips.push("敦煌");apply({aes:6,spirit:2,know:-2});st.works++;addLog(st.track==="DSE"?"你喺洞窟入面臨摹咗成個下晝。返到香港，你畫滿咗一本簿。":"你喺洞窟入面臨摹咗成個下晝。返到香港，你改咗畢業創作嘅方向。",true);}},
    {t:"留喺香港準備申請同 DSE",sub:"知識上升",run(){apply({know:3});addLog("你將個名額讓咗出嚟，留喺香港溫書。");}}
   ]},
- {id:"mentorForget",y:3,m:10,scene:"school",title:"推薦信",cond:()=>st.mentor.ty!=="strict",text:()=>MFORGET.text(),opts:()=>MFORGET.opts()},
+ {id:"mentorForget",y:3,m:10,scene:"school",title:"推薦信",cond:()=>st.mentor.ty!=="strict",text:()=>`${M()}應承幫你寫升學推薦信。聽日就係死線，佢仲未交。`,
+  opts:()=>[
+   O("禮貌咁提佢",{spirit:-1},`你傳咗個訊息。${M()}凌晨兩點覆：「寫緊。對唔住。」第二朝封信喺你枱面。`,()=>trust(3)),
+   O("搵科主任幫手催",{},`科主任一出聲，封信當日就有。${M()}之後見到你有啲尷尬。`,()=>trust(-8)),
+   O("算啦，唔要推薦信",{spirit:-2},"你冇再追。申請表嗰欄你留空咗。",()=>{st.flags.noRef=1;})]},
  {id:"apply",y:3,m:11,scene:"school",title:"遞交申請",
   text:()=>`申請季節到。你中五寫低嘅目標係「${targetName(st.target)}」。而家要真正遞交申請。`,
   fact:"老師為同學處理作品集、報考大學聯合招生辦法（JUPAS）或海外大學。書院已與新加坡南洋藝術學院等簽署合作備忘，並接待英國 Leeds Arts University、Norwich University of the Arts 等到校舉辦招生工作坊。（學校發展計劃 2025–28、周年報告）",
@@ -1441,8 +1445,8 @@ function ensureWorld(s){
   });
   if(!s.mentor){const m=pick(MENTORS);s.mentor={...m,trust:42+Math.round(rnd()*10)};s.mLeaveAt=rnd()<.12?12+Math.floor(rnd()*9):-1;}
 }
-// 時間表：每樣長期嘅嘢佔一格，超過三格就會頂唔順
-const CAP=3;
+// 時間表：每樣長期嘅嘢佔一格，超過兩格就會頂唔順
+const CAP=2;
 const loads=()=>[st.job==="mcd"&&["麥當勞夜班",2,"job"],st.job==="teacher"&&["老師嘅助手",1,"job"],st.team&&[st.team,1,"team"],st.flags.catclub&&["貓舍義工",1,"cat"],st.partner&&["拍拖",1,"love"],st.track==="BOTH"&&["雙修",1,"both"]].filter(Boolean);
 const loadN=()=>loads().reduce((a,x)=>a+x[1],0);
 const loadText=()=>{const a=loads(),n=loadN();return a.length?`${a.map(x=>x[0]+(x[1]>1?"×2":"")).join("、")}：${n}／${CAP} 格${n>CAP?"（超出）":""}`:`0／${CAP} 格`;};
@@ -1465,15 +1469,9 @@ EVMAP.mentorRemember={id:"mentorRemember",scene:"school",title:()=>`${M()}記得
    O("唔好意思攞",{spirit:-1},`你將張表摺埋放入書包。${M()}冇追問。`)]
   :[O("睇完去搵佢傾",{aes:2,know:1},`你睇完本書去搵${M()}，傾咗一個鐘。`,()=>trust(5)),
     O("放喺書包冇睇",{},"本書喺你書包住咗一個學期。",()=>trust(-2))]};
-const MFORGET={
-  text:()=>`${M()}應承幫你寫升學推薦信。聽日就係死線，佢仲未交。`,
-  opts:()=>[
-   O("禮貌咁提佢",{spirit:-1},`你傳咗個訊息。${M()}凌晨兩點覆：「寫緊。對唔住。」第二朝封信喺你枱面。`,()=>trust(3)),
-   O("搵科主任幫手催",{},`科主任一出聲，封信當日就有。${M()}之後見到你有啲尷尬。`,()=>trust(-8)),
-   O("算啦，唔要推薦信",{spirit:-2},"你冇再追。申請表嗰欄你留空咗。",()=>{st.flags.noRef=1;})]};
 EVMAP.mentorLeave={id:"mentorLeave",scene:"school",title:()=>`${M()}要走`,
   text:()=>`${M()}喺 Mentor Period 宣佈，做埋今個月就離開書院。全班靜咗。`,
-  opts:()=>{const old=M(),nw=pick(MENTORS.filter(m=>m.n!==old)),swap=()=>{st.flags.oldMentor=old;st.mentor={...nw,trust:30};addLog(`新 Mentor 係${nw.n}（教${nw.subj}）。一切由頭嚟過。`,true);};return [
+  opts:()=>{const old=M(),nw=pick(MENTORS.filter(m=>m.n!==old)),swap=()=>{st.mentor={...nw,trust:30};addLog(`新 Mentor 係${nw.n}（教${nw.subj}）。一切由頭嚟過。`,true);};return [
    O("畫張卡俾佢",{spirit:1,rel:1},`你畫咗張卡俾${old}。佢話會帶去新地方。`,swap),
    O("冇特別講嘢",{},`${old}最後一日，你同平時一樣講咗聲拜拜。`,swap)];}};
 
@@ -1932,7 +1930,7 @@ EVMAP.daily={id:"daily",scene:()=>dailyNow().scene||"school",title:()=>dailyNow(
 const AFTER=[
  {t:"去睇展（$80）",c:80,fx:{aes:3},l:"你去咗大館睇展，喺一件作品前面企咗好耐。"},
  {t:"去睇電影（$90）",c:90,fx:{aes:2,spirit:1},l:"你一個人去睇咗場戲。散場後喺街行咗一個鐘。"},
- {t:"去美芝買材料（$150）",c:150,fx:{aes:3},l:"你喺美芝行咗兩個鐘，買咗一堆未知用唔用到嘅材料。",w:1},
+ {t:"去美芝買材料（$150）",c:150,fx:{aes:3},l:"你喺美芝行咗兩個鐘，買咗一堆未知用唔用到嘅材料。"},
  {t:"行山",c:0,fx:{health:4,spirit:1},l:"你放學去行獅子山。"},
  {t:"打籃球",c:0,fx:{health:2,rel:1},l:"你喺二樓籃球場打波打到天黑，過咗一日。"},
  {t:"喺圖書館瞓覺",c:0,fx:{spirit:2,health:1},l:"你喺圖書館瞓著咗，醒返已經五點半，過咗一日。"},
@@ -2496,13 +2494,30 @@ function epilogue(){
   if(f.japanese)a.push("你嘅日文去到睇得明便利店餐牌。");
   return a;
 }
-// 結果圖：有淺色同深色兩款；高度跟內容長短
-function drawShare(dark){
-  const c=document.createElement("canvas"),W=c.width=1080,x=c.getContext("2d"),o=st.outcome,early=o.k==="early";
-  const T=dark?{bg:"#0F1117",card:"#1F222C",ink:"#ECEDE8",mu:"#A0A4B4",ln:"#3A3E4C"}:{bg:"#ECEDE8",card:"#F8F8F4",ink:"#1D2340",mu:"#5F6476",ln:"#C7C9D1"};
-  const {ink,mu,ln}=T,pk="#FF48B0",ye="#FFE800",cols=["#00A95C",pk,"#0078BF",ye,mu];
-  const F=(w,s,f)=>{x.font=`${w} ${s}px ${f}`;},disp=`"Chiron Sung HK","Songti TC",serif`,body=`"Chiron Hei HK","PingFang TC",sans-serif`,mono=`"IBM Plex Mono",Menlo,monospace`;
+// 兩張結果圖共用：配色、字體、斷行、外框、頁首頁尾；高度跟內容長短
+function shareSheet(dark,band,title,right,body){
+  const c=document.createElement("canvas"),W=c.width=1080,x=c.getContext("2d");
+  const T=dark?{bg:"#0F1117",card:"#1F222C",ink:"#ECEDE8",mu:"#A0A4B4",ln:"#3A3E4C",soft:"#4A2440"}:{bg:"#ECEDE8",card:"#F8F8F4",ink:"#1D2340",mu:"#5F6476",ln:"#C7C9D1",soft:"#FFD3EC"};
+  const F=(w,s,f)=>{x.font=`${w} ${s}px ${f}`;},disp=`"Chiron Sung HK","Songti TC",serif`,sans=`"Chiron Hei HK","PingFang TC",sans-serif`,mono=`"IBM Plex Mono",Menlo,monospace`;
   const lines=(t,maxW,max)=>{const a=[];let line="";for(const ch of String(t)){if(x.measureText(line+ch).width>maxW){a.push(line);line=ch;}else line+=ch;}a.push(line);if(a.length>max){a.length=max;a[max-1]=a[max-1].slice(0,-1)+"…";}return a;};
+  const kit={x,W,T,F,lines,disp,body:sans,mono,pk:"#FF48B0",bl:"#0078BF",gr:"#00A95C",ye:"#FFE800"};
+  const paint=()=>{
+    const H=c.height;x.textAlign="left";
+    x.fillStyle=T.bg;x.fillRect(0,0,W,H);
+    x.fillStyle=T.card;x.fillRect(50,50,W-100,H-100);x.strokeStyle=T.ink;x.lineWidth=4;x.strokeRect(50,50,W-100,H-100);
+    x.fillStyle=band;x.fillRect(52,52,W-104,108);
+    x.fillStyle="#fff";x.textBaseline="middle";F(900,50,disp);x.fillText(title,90,108);
+    F(600,24,mono);x.textAlign="right";x.fillText(right,W-90,108);x.textAlign="left";x.textBaseline="alphabetic";
+    return body(kit);
+  };
+  c.height=4200;const end=paint();c.height=Math.max(1350,Math.ceil(end)+150);paint();
+  const H=c.height;x.fillStyle=T.mu;F(400,24,sans);x.fillText("非官方模擬遊戲 · 角色同事件均屬虛構",90,H-84);
+  x.fillStyle=T.ink;F(600,26,mono);x.textAlign="right";x.fillText(SITE,W-90,H-84);x.textAlign="left";
+  return c;
+}
+// 成績表
+function drawShare(dark){
+  const o=st.outcome,early=o.k==="early";
   const L=a=>a&&a.length?a.join("、"):"冇",lv=v=>v>=2?v+" 級":"唔合格";
   const rows=[["專修",st.major?AREAS[st.major].n:"—"],["路線",trackName()]];
   if(early){rows.push(["離開書院",o.when]);if(o.reason)rows.push(["原因",o.reason]);rows.push(["之後",o.detail]);}
@@ -2513,14 +2528,8 @@ function drawShare(dark){
   }
   rows.push(["選修科",L(st.electives)],["藝術工作室",L(st.studios)],["遊學",L(st.trips)],["實習",L(st.interns)],["獎項",L(st.awards)],["PLI",st.pli||"—"],["校隊",st.team||"冇"],["陸運會 cosplay",st.cosplay||"—"],["遲到／缺席",`${st.latesTotal} 次／${st.absTotal} 日`],["Visual Diary",Math.floor(st.diary)+" 本"]);
   const epi=epilogue().slice(0,6);
-  const paint=()=>{
-    const H=c.height;
-    x.textAlign="left";x.textBaseline="alphabetic";
-    x.fillStyle=T.bg;x.fillRect(0,0,W,H);
-    x.fillStyle=T.card;x.fillRect(50,50,W-100,H-100);x.strokeStyle=ink;x.lineWidth=4;x.strokeRect(50,50,W-100,H-100);
-    x.fillStyle=pk;x.fillRect(52,52,W-104,108);
-    x.fillStyle="#fff";x.textBaseline="middle";F(900,52,disp);x.fillText("書院人類 140分之1",90,108);
-    F(600,26,mono);x.textAlign="right";x.fillText("2026–2029",W-90,108);x.textAlign="left";x.textBaseline="alphabetic";
+  return shareSheet(dark,"#FF48B0","書院人類 140分之1","2026–2029",({x,W,T,F,lines,body,disp,mono,pk,ye})=>{
+    const {ink,mu,ln}=T,cols=["#00A95C",pk,"#0078BF",ye,mu];
     x.fillStyle=mu;F(400,30,body);x.fillText(`${st.p.name}（${st.p.nick}）· ${st.p.g==="F"?"女":"男"} · ${st.p.dist} · ${st.p.fam.n}`,90,225);
     x.fillStyle=ink;F(900,56,disp);let y=310;lines(o.name,W-180,3).forEach(t=>{x.fillText(t,90,y);y+=70;});
     F(800,32,body);const cw=x.measureText(o.cat).width+36;x.fillStyle=ye;x.fillRect(90,y-34,cw,52);x.fillStyle="#1D2340";x.fillText(o.cat,108,y+2);
@@ -2544,11 +2553,7 @@ function drawShare(dark){
     y+=3*44+26;
     x.fillStyle=mu;F(400,24,body);x.fillText("三年地圖：一格一個月，越深色身心越好",90,y);
     return y;
-  };
-  c.height=4200;const end=paint();c.height=Math.max(1350,Math.ceil(end)+150);paint();
-  const H=c.height;x.fillStyle=mu;F(400,24,body);x.fillText("非官方模擬遊戲 · 角色同事件均屬虛構",90,H-84);
-  x.fillStyle=ink;F(600,26,mono);x.textAlign="right";x.fillText(SITE,W-90,H-84);x.textAlign="left";
-  return c;
+  });
 }
 
 // 紀念冊：人同笑位為主，同成績表係兩張唔同嘅圖
@@ -2563,21 +2568,12 @@ function ybQuote(){
   return a.length?a[(st.works*7+st.latesTotal+st.yellow*3)%a.length].x:"你行完咗呢三年。";
 }
 function drawYearbook(dark){
-  const c=document.createElement("canvas"),W=c.width=1080,x=c.getContext("2d"),o=st.outcome,early=o.k==="early";
-  const T=dark?{bg:"#0F1117",card:"#1F222C",ink:"#ECEDE8",mu:"#A0A4B4",ln:"#3A3E4C",soft:"#4A2440"}:{bg:"#ECEDE8",card:"#F8F8F4",ink:"#1D2340",mu:"#5F6476",ln:"#C7C9D1",soft:"#FFD3EC"};
-  const {ink,mu,ln}=T,pk="#FF48B0",bl="#0078BF",gr="#00A95C",ye="#FFE800",COL={"--pink":pk,"--blue":bl,"--green":gr};
-  const F=(w,s,f)=>{x.font=`${w} ${s}px ${f}`;},disp=`"Chiron Sung HK","Songti TC",serif`,body=`"Chiron Hei HK","PingFang TC",sans-serif`,mono=`"IBM Plex Mono",Menlo,monospace`;
-  const lines=(t,maxW,max)=>{const a=[];let line="";for(const ch of String(t)){if(x.measureText(line+ch).width>maxW){a.push(line);line=ch;}else line+=ch;}a.push(line);if(a.length>max){a.length=max;a[max-1]=a[max-1].slice(0,-1)+"…";}return a;};
-  const notes=[];st.peers.slice().sort((a,b)=>b.bond-a.bond).forEach(q=>{if(q.mem&&q.mem.length&&notes.length<3)notes.push([q.mem[q.mem.length-1],q.nick,COL[q.color]||pk]);});
-  if(st.mentor.trust>=60&&notes.length<4)notes.push([mentorLine().replace(/[「」]/g,""),st.mentor.n,ink]);
+  const o=st.outcome,early=o.k==="early";
   const f=st.flags,keeps=[f.tattoo&&"手腕個紋身",f.japanese&&"日文 N5",f.ironking&&"鐵尺王",f.turtleguard&&"龜池守護者",st.cosplay&&"cosplay："+st.cosplay,st.team,st.pli,st.yellow&&st.yellow+" 張黃紙",st.trips.length&&st.trips.length+" 次遊學",(f.catclub||st.fired.catJoin||st.fired.catPhoto||st.fired.catFund)&&"🐾 Yuki"].filter(Boolean);
-  const paint=()=>{
-    const H=c.height;x.textAlign="left";x.textBaseline="alphabetic";
-    x.fillStyle=T.bg;x.fillRect(0,0,W,H);
-    x.fillStyle=T.card;x.fillRect(50,50,W-100,H-100);x.strokeStyle=ink;x.lineWidth=4;x.strokeRect(50,50,W-100,H-100);
-    x.fillStyle=bl;x.fillRect(52,52,W-104,108);
-    x.fillStyle="#fff";x.textBaseline="middle";F(900,50,disp);x.fillText("書院人類 2029 畢業紀念冊",90,108);
-    F(600,24,mono);x.textAlign="right";x.fillText(`${st.mentor.n} 班`,W-90,108);x.textAlign="left";x.textBaseline="alphabetic";
+  return shareSheet(dark,"#0078BF","書院人類 2029 畢業紀念冊",`${st.mentor.n} 班`,({x,W,T,F,lines,body,disp,mono,pk,bl,gr,ye})=>{
+    const {ink,mu,ln}=T,COL={"--pink":pk,"--blue":bl,"--green":gr};
+    const notes=[];st.peers.slice().sort((a,b)=>b.bond-a.bond).forEach(q=>{if(q.mem&&q.mem.length&&notes.length<3)notes.push([q.mem[q.mem.length-1],q.nick,COL[q.color]||pk]);});
+    if(st.mentor.trust>=60&&notes.length<4)notes.push([mentorLine().replace(/[「」]/g,""),st.mentor.n,ink]);
     // 你
     paintFace(x,st.p.g,90,200,3.4,pk,bl,T.soft);x.strokeStyle=ink;x.lineWidth=3;x.strokeRect(90,200,217.6,265.2);
     let y=258;const X=345,mw=W-90-X;
@@ -2613,11 +2609,7 @@ function drawYearbook(dark){
       y+=30;
     }
     return y;
-  };
-  c.height=4200;const end=paint();c.height=Math.max(1350,Math.ceil(end)+140);paint();
-  const H=c.height;x.fillStyle=mu;F(400,24,body);x.fillText("非官方模擬遊戲 · 角色同事件均屬虛構",90,H-84);
-  x.fillStyle=ink;F(600,26,mono);x.textAlign="right";x.fillText(SITE,W-90,H-84);x.textAlign="left";
-  return c;
+  });
 }
 
 /* ============ end screen ============ */
