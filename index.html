@@ -379,8 +379,9 @@ details.fact summary{cursor:pointer;font-family:var(--f-mono);font-size:12px;let
   <div class="explain">
     <div><h3>同一個 Mentor 班</h3><p>書院實行師友制（Mentorship）。你入學嗰陣，同班仲有四個同學。佢哋會問你借錢、求你幫手、同你嗌交、約你出街；佢哋嘅三年亦會按同樣嘅機率行落去。最後各自去邊，冇人預先知。</p></div>
     <div><h3>選擇會改變三年</h3><p>每個學期揀一個重心，喺創作週、選專修、DSE 同創意藝術文憑之間、升學申請呢啲關口做決定。之前揀過嘅嘢，之後會返嚟搵你。選擇會改變結果，但好難完全擺脫家境同時間嘅限制。</p></div>
-    <div><h3>你行過嘅結局</h3><p>每次畢業（或者冇畢業）都會記低。</p><div id="endingsIntro"></div><div id="achvIntro" style="margin-top:14px"></div></div>
+    <div><h3>你行過嘅結局</h3><p>每次畢業（或者冇畢業）都會記低。</p><div id="endingsIntro"></div></div>
   </div>
+  <div id="achvIntro" style="padding-bottom:28px"></div>
   <div class="roster-intro">
     <div class="rhead"><h2>書院人類名冊</h2><span class="label">校董會及教職員 · 書院官網</span></div>
     <p>你呢三年會遇到嘅人。以下名字全部嚟自書院官網嘅校董會成員同教師團隊頁面，只列出職位同任教範疇。</p>
@@ -569,8 +570,8 @@ const NICK="豆腐 意粉 菠蘿 茶包 阿星 細貓 墨魚 雞蛋仔 蘑菇 �
 const DIST=[["黃大仙",15],["深水埗",25],["九龍城",15],["觀塘",30],["沙田",30],["將軍澳",40],["大埔",40],["荃灣",40],["葵青",35],["港島東",45],["南區",50],["屯門",70],["元朗",65],["天水圍",75],["東涌",70],["南丫島",85]];
 const AREAS={
   DVC:{n:"設計與視覺傳意",s:"DVC",c:"--pink",field:"設計／視覺傳意"},
-  FVA:{n:"電影與錄像",s:"FVA",c:"--blue",field:"電影／媒體"},
-  SS:{n:"空間研習",s:"SS",c:"--green",field:"建築／室內／空間設計"},
+  FVA:{n:"電影與錄像",s:"FDA",c:"--blue",field:"電影／媒體"},
+  SS:{n:"空間研習",s:"ESS",c:"--green",field:"建築／室內／空間設計"},
   PA:{n:"表演藝術",s:"PA",c:"--pink",field:"戲劇／舞蹈"},
   MSA:{n:"音樂與聲音藝術",s:"MSA",c:"--blue",field:"音樂／聲音藝術"}
 };
@@ -664,7 +665,7 @@ function genPerson(isPlayer){
 const blank=()=>({speed:1,paused:false,auto:false,hist:{health:[],spirit:[],rel:[],aes:[],know:[]},
   job:null,absYear:0,absTotal:0,smoke:0,yellow:0,exes:0,focus:null,dropped:null,rotation:[],major:null,track:null,target:null,team:null,
   flags:{},flagAt:{},cool:{},seen:[],works:0,lates:0,latesTotal:0,electives:null,studios:[],lecture:null,diary:1,awards:[],trips:[],interns:[],
-  log:[],queue:[],pending:null,last:null,fired:{},minorDone:{},mapv:[],crisisY:{},outcome:null});
+  log:[],queue:[],pending:null,last:null,fired:{},minorDone:{},mapv:[],crisisY:{},outcome:null,ersAt:null,pErsAt:null});
 function newGame(len){
   const p=genPerson(true);
   const peers=[],used=new Set([p.nick]);
@@ -1055,8 +1056,8 @@ const EVENTS=[
    {t:"做暑期工儲錢",sub:"有錢；幫補升學嘅旅費",run(){st.flags.saved=1;apply({spirit:1});money(5000);addLog("你做咗兩份暑期工，儲咗 $5,000。");}}
   ]},
  /* ---- 中六 ---- */
- {id:"gp",y:3,m:9,scene:"studio",title:"畢業創作：你要講乜？",
-  text:()=>`中六最重要嘅作品係畢業創作（Graduation Project）。你嘅專修係${st.major?AREAS[st.major].n:"專修科"}，題目由你自己定。`,
+ {id:"gp",y:3,m:9,scene:"studio",title:"畢業創作：你要講乜？",cond:()=>st.track!=="DSE",
+  text:()=>`讀創意藝術文憑嘅同學，中六仲有 CPOP 堂，最重要嘅作品係畢業創作（Graduation Project）。你嘅專修係${st.major?AREAS[st.major].n:"專修科"}，題目由你自己定。`,
   fact:"畢業創作要求同學在有計劃的情況下長期創作，展示個人的美學判斷、世界觀和想像力，從中認識自己、關懷世界。（書院官網：創意藝術文憑）",
   opts:[
    {t:"屋企同記憶",sub:"關於你自己",run(){st.gp="屋企同記憶";addLog("你嘅畢業創作題目：屋企同記憶。你開始訪問婆婆。",true);}},
@@ -1071,24 +1072,35 @@ const EVENTS=[
   text:()=>"校董贊助五位中六同學，同大專院校嘅學生一齊參加八日嘅敦煌遊學團，喺研究院安排下觀摩洞窟壁畫、寫生臨摹。老師推薦咗你。",
   fact:"2026年10月，五位中六同學參與主題為「敦煌之美。動與靜」的遊學團。（書院官方社交媒體）",
   opts:[
-   {t:"去",sub:"審美大升，精神上升，知識下降",run(){st.trips.push("敦煌");apply({aes:6,spirit:2,know:-2});st.works++;addLog("你喺洞窟入面臨摹咗成個下晝。返到香港，你改咗畢業創作嘅方向。",true);}},
+   {t:"去",sub:"審美大升，精神上升，知識下降",run(){st.trips.push("敦煌");apply({aes:6,spirit:2,know:-2});st.works++;addLog(st.track==="DSE"?"你喺洞窟入面臨摹咗成個下晝。返到香港，你畫滿咗一本簿。":"你喺洞窟入面臨摹咗成個下晝。返到香港，你改咗畢業創作嘅方向。",true);}},
    {t:"留喺香港準備申請同 DSE",sub:"知識上升",run(){apply({know:3});addLog("你將個名額讓咗出嚟，留喺香港溫書。");}}
   ]},
  {id:"apply",y:3,m:11,scene:"school",title:"遞交申請",
   text:()=>`申請季節到。你中五寫低嘅目標係「${targetName(st.target)}」。而家要真正遞交申請。`,
   fact:"老師為同學處理作品集、報考大學聯合招生辦法（JUPAS）或海外大學。書院已與新加坡南洋藝術學院等簽署合作備忘，並接待英國 Leeds Arts University、Norwich University of the Arts 等到校舉辦招生工作坊。（學校發展計劃 2025–28、周年報告）",
   opts:()=>TARGETS.map(t=>({t:t.n+(t.k===st.target?"（原本嘅目標）":""),sub:"估計："+chanceLabel(t.k),run(){if(st.target!==t.k)addLog(`你改變主意，改為申請：${t.n}。`,true);else addLog(`你遞交咗申請：${t.n}。`);st.target=t.k;}}))},
- {id:"mock",y:3,m:1,scene:"exam",title:"模擬考",
-  text:()=>"模擬考同畢業創作嘅中期評審撞正同一個月。",
-  opts:[
+ {id:"mock",y:3,m:1,scene:()=>st.track==="DCA"?"studio":"exam",title:()=>st.track==="DCA"?"畢業創作中期評審":"模擬考",
+  text:()=>st.track==="DSE"?"一月，模擬考。你只讀 DSE，中六冇 CPOP 堂，時間表淨係得返考試科目。":st.track==="DCA"?"一月，畢業創作中期評審。同屆讀 DSE 嘅同學考緊模擬考，你就要企喺導師面前講自己件作品。":"模擬考同畢業創作嘅中期評審撞正同一個月。",
+  opts:()=>st.track==="DSE"?[
+   O("全力衝刺",{know:6,spirit:-4,health:-1},"你將所有 past paper 由頭做多一次。"),
+   O("照平時節奏溫",{know:3,spirit:-1},"你照住自己個時間表溫，冇加碼。"),
+   O("考完先放一日假",{know:1,spirit:3},"考完最後一科，你同同學去咗食放題。")]
+  :st.track==="DCA"?[
+   {t:"評審前通宵改",sub:"審美大升，健康下降",run(){apply({aes:6,health:-3});st.works++;addLog("中期評審嗰陣，導師話你件作品「終於有你自己把聲」。");}},
+   O("照原定計劃講",{aes:3,spirit:1},"你照住計劃講完。導師俾咗三個方向，你揀咗最難嗰個。")]
+  :[
    {t:"全力衝刺 DSE",sub:"知識大升，審美、精神下降",run(){apply({know:6,spirit:-4,health:-1,aes:-2});addLog("你將畢業創作放低咗一個月。");}},
    {t:"兩邊平衡",sub:"知識、審美上升，精神下降",run(){apply({know:3,aes:3,spirit:-2});addLog("你每日朝早溫書，夜晚做畢業創作。");}},
    {t:"專心做畢業創作",sub:"審美大升，知識稍降",run(){apply({aes:6,know:-1});st.works++;addLog("中期評審嗰陣，導師話你件作品「終於有你自己把聲」。");}}
   ]},
  {id:"gradshow",y:3,m:3,scene:"gallery",title:"畢業展開幕",
-  text:()=>{st._spot=st._spot||pick(["二樓走廊盡頭","展覽廳入口","多媒體劇場隔籬","創意大道中間"]);return `畢業展喺書院展覽廳同劇場開幕。你件作品《${st.gp||"無題"}》放喺${st._spot}。`;},
+  text:()=>{if(st.track==="DSE")return "畢業展喺書院展覽廳同劇場開幕，展出讀創意藝術文憑嘅同學嘅畢業創作。你只讀 DSE，冇作品展出。";st._spot=st._spot||pick(["二樓走廊盡頭","展覽廳入口","多媒體劇場隔籬","創意大道中間"]);return `畢業展喺書院展覽廳同劇場開幕。你件作品《${st.gp||"無題"}》放喺${st._spot}。`;},
   fact:"書院展覽廳、多媒體劇場、小劇場等場地都在校舍內，畢業展由學生組成籌委會籌備。（書院官網：空間及設施、周年報告）",
-  opts:[
+  opts:()=>st.track==="DSE"?[
+   O("幫同學佈展",{rel:3,health:-1},()=>`你幫「${bondWith(6)}」搬咗成晚嘢，釘埋最後一口釘。`),
+   O("開幕嗰日去睇",{aes:2,spirit:1},"你逐件作品睇，喺其中一件前面企咗好耐。"),
+   O("留喺屋企溫書",{know:2},"你留喺屋企做 past paper，喺 IG 睇開幕嘅限時動態。")]
+  :[
    {t:"企喺作品隔籬，同觀眾傾",sub:"關係、審美上升",run(){apply({rel:3,aes:2});addLog(`有個陌生人喺你件作品前面企咗十分鐘，然後話：「我都住${st.p.dist}。」`);}},
    {t:"匿喺後台，偷睇大家嘅反應",sub:"精神上升",run(){apply({spirit:2});addLog("你喺後台見到阿媽喺你件作品前面影咗好多相。");}}
   ]},
@@ -1180,17 +1192,23 @@ const EVENTS=[
    {t:"陪佢哋去，自己唔紋",sub:"關係稍升",run(){apply({rel:2});addLog("你陪朋友紋身，幫佢哋影相。");}},
    {t:"唔去",sub:"關係稍降",run(){apply({rel:-1});addLog("你冇去。之後群組成日講起嗰日。");}}
   ]},
- {id:"fda",y:2,m:7,scene:"camp",title:"FDA 創作營",
-  text:()=>"暑假前嘅創作營，幾日幾夜同一班人困喺營地做作品。",
+ {id:"fda",y:2,m:7,scene:"camp",title:"FDA 創作營",cond:()=>st.major==="FVA",
+  text:()=>"暑假前，電影與錄像（FDA）專修嘅創作營。幾日幾夜同一班人困喺營地拍嘢、剪片。",
   opts:[
    {t:"全程投入，日日做到凌晨",sub:"審美、關係上升，健康下降",run(){apply({aes:4,rel:4,health:-4,spirit:1});st.works++;addLog("創作營最後一晚，你哋喺營地播晒所有作品，好多人喊。");}},
    {t:"做完份內就去休息",sub:"健康、精神上升",run(){apply({health:2,spirit:3,rel:1});addLog("你每晚準時瞓，聽住其他人喺隔籬房笑。");}}
   ]},
- {id:"ess",y:3,m:11,scene:"camp",title:"ESS 中六 camp",
-  text:()=>"中六 camp。最後一次同全級一齊出去過夜。",
+ {id:"fdaActor",y:2,m:7,scene:"camp",title:"「可唔可以幫我做演員？」",cond:()=>st.major!=="FVA"&&alive().some(q=>q.bond>=35),
+  text:()=>`「${evPeer("fdaActor",a=>a.slice().sort((x,y)=>y.bond-x.bond)[0]).nick}」專修電影與錄像（FDA）。FDA 創作營本身得 FDA 嘅同學去，但佢條片爭一個演員，問你肯唔肯入營幫手。`,
+  opts:()=>{const n=evPeer("fdaActor").nick;return [
+   O("去做演員",{rel:3,aes:2,health:-2,spirit:1},`你入咗營做「${n}」條片嘅演員。同一句對白講咗二十幾次，最後一晚放映，你喺銀幕見到自己。`,()=>bondWith(10,n),"同佢熟好多"),
+   O("幫佢搵第二個",{rel:1},`你幫「${n}」問咗幾個人，最後有人肯去。`,()=>bondWith(2,n)),
+   O("唔去",{},`你話唔得閒。「${n}」話冇所謂。`,()=>bondWith(-3,n))];}},
+ {id:"dcacamp",y:3,m:1,scene:"camp",title:"DCA camp",cond:()=>st.track!=="DSE",
+  text:()=>"一月，DCA camp。只有讀創意藝術文憑嘅同學去，喺營地過夜，一齊做畢業創作、互相睇 work。",
   opts:[
-   {t:"通宵傾偈",sub:"關係、精神上升，健康下降",run(){apply({rel:4,spirit:4,health:-3});addLog("你哋傾到天光，講完三年嘅事。");}},
-   {t:"早起行山睇日出",sub:"健康、精神上升",run(){apply({health:4,spirit:3});addLog("你五點起身行山，見到日出，諗起中四第一日。");}}
+   {t:"通宵同人傾作品",sub:"關係、精神上升，健康下降",run(){apply({rel:4,spirit:4,health:-3});addLog("你哋傾到天光，由畢業創作講到呢三年嘅事。");}},
+   {t:"早瞓，朝早行山睇日出",sub:"健康、精神上升",run(){apply({health:4,spirit:3});addLog("你五點起身行山，見到日出，諗起中四第一日。");}}
   ]},
 ];
 const EVMAP={};EVENTS.forEach(e=>EVMAP[e.id]=e);
@@ -1340,7 +1358,9 @@ function peerTick(){
 // once：成局只出一次；cd：出過之後要隔幾多個月先可以再出
 const R=(id,w,cond,o)=>({id,w,cond,once:1,...o});
 const RANDOM=[
- R("vape",2,()=>st.i>=2),R("weed",2,()=>st.i>=4),R("ers",.5,()=>st.i>=6&&st.i<=30&&(st.electives||[]).includes("倫理與宗教")),
+ R("vape",2,()=>st.i>=2),R("weed",2,()=>st.i>=4),R("skip",2,()=>st.i>=2&&calMonth(st.i)!==8,{once:0,cd:7}),
+ R("catJoin",3,()=>st.i>=1),R("catShift",4,()=>st.flags.catclub&&since("catclub")>=2,{once:0,cd:9}),
+ R("catFund",2,()=>st.i>=2,{once:0,cd:14}),R("catPhoto",2,()=>st.i>=4),
  R("clique",3,()=>st.s.rel>=72&&st.s.spirit>=60),R("gameclass",2,()=>st.s.spirit<58),R("gamble",2,()=>st.s.rel>=50),
  R("mcd",3,()=>st.money<500&&!st.job&&st.i>=6),R("schoolsmoke",4,()=>st.smoke,{once:0}),R("quitsmoke",2,()=>st.smoke&&st.i>=10),
  R("bird",2,()=>st.i>=3),R("mentorfight",2,()=>st.i>=5),R("gang",3,()=>st.p.bg&&st.p.bg.k==="gang"&&st.i>=8),
@@ -1453,6 +1473,42 @@ EVMAP.ers={id:"ers",scene:"school",title:"ERS 老師問你",
   text:()=>"倫理與宗教堂之後，ERS 老師叫住你：「你做咩唔退學？」",
   opts:[{t:"直接退學",sub:"遊戲會結束",run(){endEarly("中途退學","你答：「好，咁我退。」第二日你交咗退學信。","","ers")}},
         {t:"關你咩事",sub:"精神上升，關係下降",run(){apply({spirit:3,rel:-2});addLog("你答：「關你咩事。」然後行咗出課室。");}}]};
+EVMAP.pErs={id:"pErs",scene:"school",title:"「佢問我做咩唔退學」",
+  text:()=>`小息，「${evPeer("pErs").nick}」塊面好黑。倫理與宗教堂之後，ERS 老師叫住佢，問咗一句：「你做咩唔退學？」佢問你：「係咪我真係唔應該喺度？」`,
+  opts:()=>{const q=evPeer("pErs"),n=q.nick;return [
+   O("「關佢咩事。」",{rel:2,spirit:1},`「${n}」笑咗出聲，話：「我頭先都想咁答。」佢冇再提退學。`,()=>bondWith(8,n),"同佢熟咗"),
+   O("陪佢去搵 Mentor 講",{rel:1,spirit:-1},`你陪「${n}」去搵 Mentor，由頭講咗一次。Mentor 話會跟進。「${n}」話，至少有人信佢。`,()=>{bondWith(11,n);q.s.spirit=clamp(q.s.spirit+12);},"同佢熟好多"),
+   {t:"「你自己決定啦」",sub:"佢可能真係會走",run(){if(rnd()<.4){q.left=true;q.status="退咗學";apply({spirit:-2});addLog(`過咗兩個星期，「${n}」個位空咗。有人話佢答咗老師：「好，咁我退。」`,true,true);}else{bondWith(-3,n);addLog(`「${n}」點咗頭，之後冇再講。佢照返學。`);}}}];}};
+EVMAP.skip={id:"skip",scene:"school",title:"下晝連堂",
+  text:()=>`食完晏，下晝係連堂${vary("skip",["數學","中文","英文","通識"])}。出面天氣好好。`,
+  opts:[
+   {t:"走堂",sub:"審美、精神上升，知識下降；缺席一日",run(){apply({aes:2,spirit:1,know:-2});st.absYear++;st.absTotal++;addLog("你走咗下晝堂，一個人去咗海邊。過咗一日。");}},
+   O("返去上堂",{know:1},"你返咗課室，望住個窗上完兩堂。")]};
+EVMAP.catJoin={id:"catJoin",scene:"school",title:"貓社招人",
+  text:()=>"貓社（書院貓舍）貼咗張招募：搵同學輪更餵貓、鏟屎、影相。而家住喺度嘅係暫託貓 Yuki，一隻奶牛貓。",
+  fact:"書院貓舍 2023 年成立，由同學與社工攜手營運，主要靠自負盈虧模式，為貓貓賺罐罐。現任小主人係暫託貓 Yuki。（書院貓舍 Instagram @hksccat_home）",
+  opts:[
+   O("報名做貓社義工",{spirit:2,rel:2},"你入咗貓社。第一日學鏟屎，Yuki 坐喺隔籬監工。",()=>flag("catclub"),"之後要輪更"),
+   O("淨係入去摸吓 Yuki",{spirit:2},"你入去摸咗 Yuki 十分鐘，出返嚟成身貓毛。"),
+   O("你對貓毛敏感",{},"你隔住塊玻璃同 Yuki 打咗個招呼。")]};
+EVMAP.catShift={id:"catShift",scene:"school",title:"貓社：輪到你當值",
+  text:()=>`今個星期輪到你當值：${vary("catShift",["假期都要返書院餵 Yuki","要幫 Yuki 剪指甲","要洗晒貓舍啲兜同執貓砂"])}。`,
+  opts:()=>[
+   O("準時去",{spirit:2,health:1},"你做晒要做嘅嘢。Yuki 食完罐罐，喺你隻鞋上面瞓著咗。"),
+   O("搵同學調更",{rel:1},()=>`「${bondWith(3)}」幫你頂咗更，條件係下次你幫返佢。`),
+   O("唔記得咗",{spirit:-2,rel:-1},"你唔記得咗。社工幫你餵咗，之後喺群組提大家記得睇更表。")]};
+EVMAP.catFund={id:"catFund",scene:"gallery",title:"貓社擺檔",
+  text:()=>`貓社喺創意大道擺檔，賣 Yuki 嘅${vary("catFund",["貼紙","明信片","匙扣"])}，幫佢賺罐罐。（銀包：${wallet()}）`,
+  opts:()=>[
+   {t:"買一份（$30）",sub:st.money<30?"錢唔夠":"精神上升；花錢",run(){if(st.money<30){addLog("你數吓個銀包，話下次先。");return;}money(-30);apply({spirit:1});addLog("你買咗一份，貼咗喺個 locker 門。");}},
+   O("幫手畫一款新嘅",{aes:2,rel:1},"你畫咗一款 Yuki 伸懶腰嘅貼紙。下次擺檔，佢賣得最快。",()=>{st.works++;}),
+   O("行過睇吓",{},"你行過檔口，同相入面嘅 Yuki 對望咗一陣。")]};
+EVMAP.catPhoto={id:"catPhoto",scene:"school",title:"奴才攝影",
+  text:()=>"貓社個 IG 徵集「奴才攝影作品」：同學影 Yuki 嘅相，揀中嘅會出帖。",
+  opts:[
+   O("認真影一輯",{aes:2,spirit:1},"你蹲喺貓舍影咗成個午飯時間。Yuki 得一張肯望鏡頭，啱啱好係最靚嗰張。貓社出咗帖。",()=>{st.works++;}),
+   O("用電話影張就算",{spirit:1},"你影咗張矇嘅，自己留低做 wallpaper。"),
+   O("冇興趣",{},"你冇投稿。")]};
 EVMAP.clique={id:"clique",scene:"school",title:"小圈子",
   text:()=>"你越嚟越有自信，身邊總係同一班人。有同學話你哋係「嗰個圈」，入唔到。",
   opts:[{t:"主動約圈外嘅同學",sub:"關係上升",run(){apply({rel:2,spirit:1});addLog("你約咗幾個平時少傾偈嘅同學食飯。");}},
@@ -1542,7 +1598,7 @@ EVMAP.cbJob={id:"cbJob",scene:"home",title:"兼職頂唔頂得順",
   text:()=>st.job==="mcd"?"你返咗一排夜班。今朝你喺巴士瞓過龍，去到總站先醒。":"幫老師做 part-time 做咗一排。今個星期你自己份功課又要交，兩邊都趕。",
   opts:()=>[
    O("辭職",{spirit:3,health:1},"你辭咗份兼職。第一個唔使開工嘅夜晚，你九點就瞓咗。",()=>{st.job=null;},"冇咗份人工"),
-   O("同老細講想唞一個星期",{spirit:1,health:1},"你講咗。老細話：「得，下個星期返嚟。」"),
+   O(`同${st.job==="teacher"?"老師":"老細"}講想唞一個星期`,{spirit:1,health:1},`你講咗。${st.job==="teacher"?"老師":"老細"}話：「得，下個星期返嚟。」`),
    O("頂住先",{spirit:-2,health:-2},"你話自己頂得順。")]};
 
 /* ---- 同學 ---- */
@@ -1759,8 +1815,8 @@ const AFTER=[
  {t:"喺放映室睇戲",c:0,fx:{aes:2},l:"你喺放映室睇咗一套圖書館收藏嘅舊電影。"},
  {t:"喺教員室煮嘢食",c:0,fx:{rel:2},l:"你同幾個老師喺教員室煮公仔麵，傾咗好多升學嘅嘢。"},
  {t:"去龜池餵龜",c:0,fx:{spirit:2,health:1},l:"你去龜池餵龜。隻龜望住你，好似明白晒。"},
- {t:"玩貓",c:0,fx:{health:1,spirit:2},l:"書院附近隻貓今日肯俾你摸。"},
- {t:"走堂",c:0,fx:{aes:2,spirit:1,know:-2},l:"你走咗下晝堂，一個人去咗海邊。過咗一日。",abs:1},
+ {t:"去貓社摸 Yuki",c:0,fx:{health:1,spirit:2},l:()=>pick(["你去貓社摸 Yuki。佢今日肯俾你摸足十分鐘。","Yuki 喺貓社瞓緊晏覺。你坐喺隔籬做功課，佢隻腳搭咗喺你本簿度。","你去貓社搵 Yuki。隻奶牛貓望咗你一眼，轉身用個背脊對住你。你照摸。"])},
+ {t:"喺創意大道聽人夾 band",c:0,fx:{aes:1,spirit:2},l:"放學有人喺創意大道夾 band。你坐喺樓梯聽到收檔。"},
  {t:"留到六點唔肯走，直到老師趕人",c:0,fx:{aes:2,rel:1},l:"你喺工作室留到六點，老師嚟趕人先肯走。過咗一日。"},
  {t:"做 work 做通宵",c:0,fx:{aes:3,health:-3},l:"你做 work 做到天光。"},
  {t:"買包煙（$60）",c:60,fx:{rel:1,health:-2},l:"你第一次買咗包煙。",smoke:1,cond:()=>!st.smoke&&st.s.rel>=45},
@@ -1827,6 +1883,13 @@ function startMonth(){
   if(st.partner&&st.partner.love<20&&i-(st.cool.breakup??-9)>=3)push("breakup");
   else if(st.partner&&school&&i-(st.cool.date??-9)>=3&&rnd()<.45)push("date");
   if(school&&m!==6&&m!==1&&rnd()<.5)push("after");
+  // ERS 老師：唔入隨機池，開局先抽定。讀倫理與宗教嘅你成局有四分一機會遇到；同學就八分一
+  if(st.ersAt==null){
+    const roll=p=>{const a=Math.max(i,6),n=31-a;if(n<=0||rnd()>=p*n/25)return -1;const k=a+Math.floor(rnd()*n);return k%12===11?k-1:k;};
+    st.ersAt=roll(.25);st.pErsAt=roll(.125);if(st.pErsAt>=0&&st.pErsAt===st.ersAt)st.pErsAt+=st.pErsAt%12===10?-1:1;
+  }
+  if(i===st.ersAt&&!st.fired.ers&&(st.electives||[]).includes("倫理與宗教"))push("ers");
+  if(i===st.pErsAt&&!st.fired.pErs&&alive().length)push("pErs");
   {const ok=RANDOM.filter(r=>!(r.once&&st.fired[r.id])&&(!r.cd||i-(st.cool[r.id]??-99)>=r.cd)&&r.cond());if(ok.length&&rnd()<.45)push(wpick(ok,r=>r.w).id);}
   if(st.debt&&i-st.debt.i>=2){
     const q=peerBy(st.debt.n);
@@ -2040,10 +2103,10 @@ function renderStats(){
 }
 function renderID(){
   const p=st.p;
-  const mrz=`HKSC<${p.name}<<${p.nick}<<${st.major||"CPOP"}<<${st.track||"S4"}`.padEnd(44,"<")+"\n"+`2026S4${p.g}${calYear(st.i)}${String(calMonth(st.i)).padStart(2,"0")}<${p.orig==="原校升讀"?"OWN":"NEW"}<<<`.padEnd(44,"<");
+  const mrz=`HKSC<${p.name}<<${p.nick}<<${st.major?AREAS[st.major].s:"CPOP"}<<${st.track||"S4"}`.padEnd(44,"<")+"\n"+`2026S4${p.g}${calYear(st.i)}${String(calMonth(st.i)).padStart(2,"0")}<${p.orig==="原校升讀"?"OWN":"NEW"}<<<`.padEnd(44,"<");
   $("#idcard").innerHTML=`<div class="hd"><span>學生證 · HKSC</span><span>${gradeOf(st.i)}</span></div>
    <div class="bd"><canvas class="avatar" id="av" width="64" height="78"></canvas>
-   <dl><dt>姓名</dt><dd>${esc(p.name)}</dd><dt>花名</dt><dd>${esc(p.nick)}</dd><dt>年齡</dt><dd>${p.age+Math.floor(st.i/12)} 歲</dd><dt>入學</dt><dd>${p.orig}</dd><dt>專修</dt><dd>${st.major?AREAS[st.major].n:(st.dropped?"輪流修讀緊":"未定")}</dd><dt>路線</dt><dd>${trackName()}</dd><dt>目標</dt><dd>${st.target?targetName(st.target):"未定"}</dd></dl></div>
+   <dl><dt>姓名</dt><dd>${esc(p.name)}</dd><dt>花名</dt><dd>${esc(p.nick)}</dd><dt>性別</dt><dd>${p.g==="F"?"女":"男"}</dd><dt>年齡</dt><dd>${p.age+Math.floor(st.i/12)} 歲</dd><dt>入學</dt><dd>${p.orig}</dd><dt>專修</dt><dd>${st.major?AREAS[st.major].n:(st.dropped?"輪流修讀緊":"未定")}</dd><dt>路線</dt><dd>${trackName()}</dd><dt>目標</dt><dd>${st.target?targetName(st.target):"未定"}</dd></dl></div>
    <div class="mrz">${esc(mrz).replace("\n","<br>")}</div>`;
   drawAvatar();
 }
@@ -2144,7 +2207,7 @@ function sceneFor(){
   if(m===8)return st.focus==="explore"?"trip":"home";
   return {study:"school",art:"studio",social:"field",rest:"home",explore:"city"}[st.focus]||"school";
 }
-const CAPS={school:"九龍聯合道135號，三樓至五樓係課室。",studio:"一樓：視藝工作室、造嘢工作室、電影與錄像藝術室。",island:"南丫島。",field:"籃球場、運動場。",gallery:"地下：展覽廳、創意大道。",camp:"外展訓練營。",trip:"遊學團。",home:"屋企。",exam:"試場。",stage:"多媒體劇場／小劇場。",city:"城市就係課室。"};
+const CAPS={school:"九龍聯合道135號，三樓至五樓係課室。",studio:"一樓：視藝工作室、造嘢工作室、電影與錄像藝術室。",island:"南丫島。",field:"籃球場、運動場。",gallery:"地下：展覽廳、創意大道。",camp:"營地。",trip:"遊學團。",home:"屋企。",exam:"試場。",stage:"多媒體劇場／小劇場。",city:"城市就係課室。"};
 function renderAll(){renderTop();renderID();renderStats();renderFacts();renderFocus();renderLunch();renderLog();renderPeers();renderMap();renderResult();renderEvent();drawScene();}
 
 /* ============ riso scene ============ */
@@ -2235,13 +2298,20 @@ function drawScene(){
   x.restore();
 }
 function drawAvatar(){
-  const c=$("#av");if(!c)return;const x=c.getContext("2d");const P=css("--pink"),B=css("--blue"),Y=css("--yellow"),bg=css("--pink-soft");
-  x.globalCompositeOperation="source-over";x.fillStyle=bg;x.fillRect(0,0,64,78);
-  const bl=isDark()?"screen":"multiply";
-  x.globalCompositeOperation=bl;x.fillStyle=B;x.beginPath();x.arc(32,32,15,0,7);x.fill();x.fillRect(12,52,40,30);
-  x.fillStyle=Y;x.beginPath();x.arc(34,30,15,0,7);x.fill();
-  x.fillStyle=P;x.fillRect(st.p.g==="F"?14:18,16,st.p.g==="F"?36:28,st.p.g==="F"?26:10);
-  x.globalCompositeOperation="source-over";
+  const c=$("#av");if(!c)return;const x=c.getContext("2d"),F=st.p.g==="F";
+  const P=css("--pink"),B=css("--blue"),bg=css("--pink-soft"),skin="#F6E3C8";
+  const dot=(X,Y,r)=>{x.beginPath();x.arc(X,Y,r,0,7);x.fill();};
+  x.globalCompositeOperation="source-over";x.clearRect(0,0,64,78);x.fillStyle=bg;x.fillRect(0,0,64,78);
+  // 後面嘅頭髮
+  x.fillStyle=P;if(F){dot(32,31,18);x.fillRect(14,31,36,24);}else dot(32,30,14.5);
+  // 膊頭
+  x.fillStyle=B;x.beginPath();x.moveTo(8,78);x.quadraticCurveTo(8,54,32,54);x.quadraticCurveTo(56,54,56,78);x.closePath();x.fill();
+  // 頸同塊面
+  x.fillStyle=skin;x.fillRect(27,44,10,12);dot(32,33,13.5);
+  // 劉海
+  x.save();x.beginPath();x.arc(32,33,13.5,0,7);x.clip();x.fillStyle=P;
+  if(F){x.beginPath();x.ellipse(32,19,17,9,0,0,7);x.fill();}else{x.beginPath();x.ellipse(27,19,15,8,-.25,0,7);x.fill();}
+  x.restore();
 }
 
 /* ============ endings ============ */
@@ -2293,30 +2363,57 @@ function epilogue(){
   if(f.japanese)a.push("你嘅日文去到睇得明便利店餐牌。");
   return a;
 }
-// 結果圖：固定用淺色配色，方便分享
-function drawShare(){
-  const c=document.createElement("canvas"),W=c.width=1080,H=c.height=1350,x=c.getContext("2d"),o=st.outcome;
-  const ink="#1D2340",mu="#5F6476",ln="#C7C9D1",pk="#FF48B0",cols=["#00A95C",pk,"#0078BF","#FFE800",mu];
+// 結果圖：有淺色同深色兩款；高度跟內容長短
+function drawShare(dark){
+  const c=document.createElement("canvas"),W=c.width=1080,x=c.getContext("2d"),o=st.outcome,early=o.k==="early";
+  const T=dark?{bg:"#0F1117",card:"#1F222C",ink:"#ECEDE8",mu:"#A0A4B4",ln:"#3A3E4C"}:{bg:"#ECEDE8",card:"#F8F8F4",ink:"#1D2340",mu:"#5F6476",ln:"#C7C9D1"};
+  const {ink,mu,ln}=T,pk="#FF48B0",ye="#FFE800",cols=["#00A95C",pk,"#0078BF",ye,mu];
   const F=(w,s,f)=>{x.font=`${w} ${s}px ${f}`;},disp=`"Chiron Sung HK","Songti TC",serif`,body=`"Chiron Hei HK","PingFang TC",sans-serif`,mono=`"IBM Plex Mono",Menlo,monospace`;
-  const wrap=(t,X,Y,maxW,lh,max)=>{let line="",n=0;for(const ch of t){if(x.measureText(line+ch).width>maxW){x.fillText(line,X,Y+n*lh);line=ch;if(++n>=max)return Y+n*lh;}else line+=ch;}x.fillText(line,X,Y+n*lh);return Y+(n+1)*lh;};
-  x.fillStyle="#ECEDE8";x.fillRect(0,0,W,H);
-  x.fillStyle="#F8F8F4";x.fillRect(50,50,W-100,H-100);x.strokeStyle=ink;x.lineWidth=4;x.strokeRect(50,50,W-100,H-100);
-  x.fillStyle=pk;x.fillRect(52,52,W-104,108);
-  x.fillStyle="#fff";x.textBaseline="middle";F(900,52,disp);x.fillText("書院人類 140分之1",90,108);
-  F(600,26,mono);x.textAlign="right";x.fillText("2026–2029",W-90,108);x.textAlign="left";x.textBaseline="alphabetic";
-  x.fillStyle=mu;F(400,30,body);x.fillText(`${st.p.name}（${st.p.nick}）· ${st.p.dist} · ${st.p.fam.n}`,90,225);
-  x.fillStyle=ink;F(900,56,disp);let y=wrap(o.name,90,310,W-180,70,3);
-  F(800,32,body);const cw=x.measureText(o.cat).width+36;x.fillStyle="#FFE800";x.fillRect(90,y-34,cw,52);x.fillStyle=ink;x.fillText(o.cat,108,y+2);
-  y+=60;
-  STATK.forEach(([k,n],i)=>{const yy=y+i*56;x.fillStyle=ink;F(600,30,body);x.fillText(n,90,yy+26);x.fillStyle=ln;x.fillRect(190,yy+4,620,26);x.fillStyle=cols[i];x.fillRect(190,yy+4,6.2*st.s[k],26);x.fillStyle=ink;F(600,30,mono);x.fillText(Math.round(st.s[k]),830,yy+27);});
-  y+=5*56+24;
-  [[st.works,"作品"],[st.trips.length,"遊學"],[st.awards.length,"獎項"],[st.yellow,"黃紙"],[st.latesTotal,"遲到"]].forEach(([v,l],i)=>{const X=90+i*184;x.fillStyle=ink;F(600,56,mono);x.fillText(v,X,y+52);x.fillStyle=mu;F(400,26,body);x.fillText(l,X,y+90);});
-  y+=126;
-  const cs=(W-180-11*8)/12;
-  for(let r=0;r<3;r++)for(let m=0;m<12;m++){const v=st.mapv[r*12+m],X=90+m*(cs+8),Y=y+r*44;x.fillStyle=v==null?"#F8F8F4":`rgba(255,72,176,${(.12+v*.0088).toFixed(2)})`;x.fillRect(X,Y,cs,36);x.strokeStyle=ln;x.lineWidth=1.5;x.strokeRect(X,Y,cs,36);}
-  y+=3*44+26;
-  x.fillStyle=mu;F(400,24,body);x.fillText("三年地圖：一格一個月，越深色身心越好",90,y);
-  x.fillText("非官方模擬遊戲 · 角色同事件均屬虛構",90,H-84);
+  const lines=(t,maxW,max)=>{const a=[];let line="";for(const ch of String(t)){if(x.measureText(line+ch).width>maxW){a.push(line);line=ch;}else line+=ch;}a.push(line);if(a.length>max){a.length=max;a[max-1]=a[max-1].slice(0,-1)+"…";}return a;};
+  const L=a=>a&&a.length?a.join("、"):"冇",lv=v=>v>=2?v+" 級":"唔合格";
+  const rows=[["專修",st.major?AREAS[st.major].n:"—"],["路線",trackName()]];
+  if(early){rows.push(["離開書院",o.when]);if(o.reason)rows.push(["原因",o.reason]);rows.push(["之後",o.detail]);}
+  else{
+    if(o.chi!=null)rows.push(["DSE",`中文 ${lv(o.chi)} · 英文 ${lv(o.eng)}`]);
+    if(st.track!=="DSE")rows.push(["創意藝術文憑",o.dcaPass?"攞到（資歷架構第三級）":"攞唔到"],["畢業創作",`《${st.gp||"無題"}》`]);
+    if(st.flags.noCert)rows.push(["畢業證書","出席率唔夠八成，冇"]);
+  }
+  rows.push(["選修科",L(st.electives)],["藝術工作室",L(st.studios)],["遊學",L(st.trips)],["實習",L(st.interns)],["獎項",L(st.awards)],["PLI",st.pli||"—"],["校隊",st.team||"冇"],["陸運會 cosplay",st.cosplay||"—"],["遲到／缺席",`${st.latesTotal} 次／${st.absTotal} 日`],["Visual Diary",Math.floor(st.diary)+" 本"]);
+  const epi=epilogue().slice(0,6);
+  const paint=()=>{
+    const H=c.height;
+    x.textAlign="left";x.textBaseline="alphabetic";
+    x.fillStyle=T.bg;x.fillRect(0,0,W,H);
+    x.fillStyle=T.card;x.fillRect(50,50,W-100,H-100);x.strokeStyle=ink;x.lineWidth=4;x.strokeRect(50,50,W-100,H-100);
+    x.fillStyle=pk;x.fillRect(52,52,W-104,108);
+    x.fillStyle="#fff";x.textBaseline="middle";F(900,52,disp);x.fillText("書院人類 140分之1",90,108);
+    F(600,26,mono);x.textAlign="right";x.fillText("2026–2029",W-90,108);x.textAlign="left";x.textBaseline="alphabetic";
+    x.fillStyle=mu;F(400,30,body);x.fillText(`${st.p.name}（${st.p.nick}）· ${st.p.g==="F"?"女":"男"} · ${st.p.dist} · ${st.p.fam.n}`,90,225);
+    x.fillStyle=ink;F(900,56,disp);let y=310;lines(o.name,W-180,3).forEach(t=>{x.fillText(t,90,y);y+=70;});
+    F(800,32,body);const cw=x.measureText(o.cat).width+36;x.fillStyle=ye;x.fillRect(90,y-34,cw,52);x.fillStyle="#1D2340";x.fillText(o.cat,108,y+2);
+    y+=60;
+    STATK.forEach(([k,n],i)=>{const yy=y+i*56;x.fillStyle=ink;F(600,30,body);x.fillText(n,90,yy+26);x.fillStyle=ln;x.fillRect(190,yy+4,620,26);x.fillStyle=cols[i];x.fillRect(190,yy+4,6.2*st.s[k],26);x.fillStyle=ink;F(600,30,mono);x.fillText(Math.round(st.s[k]),830,yy+27);});
+    y+=5*56+24;
+    [[st.works,"作品"],[st.trips.length,"遊學"],[st.awards.length,"獎項"],[st.yellow,"黃紙"],[st.latesTotal,"遲到"]].forEach(([v,l],i)=>{const X=90+i*184;x.fillStyle=ink;F(600,56,mono);x.fillText(v,X,y+52);x.fillStyle=mu;F(400,26,body);x.fillText(l,X,y+90);});
+    y+=130;
+    // 詳細結果
+    x.fillStyle=ink;x.fillRect(90,y,W-180,3);y+=48;
+    rows.forEach(([k,v])=>{
+      F(600,27,body);const ls=lines(v,640,3);
+      x.fillStyle=mu;F(400,27,body);x.fillText(k,90,y);
+      x.fillStyle=ink;F(600,27,body);x.textAlign="right";ls.forEach((t,j)=>x.fillText(t,W-90,y+j*36));x.textAlign="left";
+      y+=ls.length*36+8;x.fillStyle=ln;x.fillRect(90,y-28,W-180,1.5);y+=8;
+    });
+    if(epi.length){y+=10;epi.forEach(t=>{F(400,27,body);x.fillStyle=pk;x.fillRect(90,y-18,10,10);x.fillStyle=ink;const ls=lines(t,W-220,2);ls.forEach((s,j)=>x.fillText(s,116,y+j*36));y+=ls.length*36+10;});}
+    y+=18;
+    const cs=(W-180-11*8)/12;
+    for(let r=0;r<3;r++)for(let m=0;m<12;m++){const v=st.mapv[r*12+m],X=90+m*(cs+8),Y=y+r*44;x.fillStyle=v==null?T.card:`rgba(255,72,176,${(.12+v*.0088).toFixed(2)})`;x.fillRect(X,Y,cs,36);x.strokeStyle=ln;x.lineWidth=1.5;x.strokeRect(X,Y,cs,36);}
+    y+=3*44+26;
+    x.fillStyle=mu;F(400,24,body);x.fillText("三年地圖：一格一個月，越深色身心越好",90,y);
+    return y;
+  };
+  c.height=4200;const end=paint();c.height=Math.max(1350,Math.ceil(end)+150);paint();
+  const H=c.height;x.fillStyle=mu;F(400,24,body);x.fillText("非官方模擬遊戲 · 角色同事件均屬虛構",90,H-84);
   x.fillStyle=ink;F(600,26,mono);x.textAlign="right";x.fillText(SITE,W-90,H-84);x.textAlign="left";
   return c;
 }
@@ -2326,7 +2423,7 @@ const CATS=[["學士學位",27,"--blue"],["副學位",27,"--pink"],["其他學�
 function renderEnd(){
   const o=st.outcome,early=o.k==="early",epi=epilogue(),tint=c=>`color-mix(in srgb, var(${c}) 55%, var(--card))`;
   const summary=early?`${o.when}，你離開咗書院。${o.reason?"原因："+esc(o.reason)+"。":""}之後你${esc(o.detail)}。`
-    :`${o.early?"你喺文憑試放榜之前已經收到取錄，係嗰年放榜前獲學士取錄嘅同學之一。":""}${o.chi==null?"你只讀 DCA，冇報考 DSE。":`DSE 中文 ${o.chi>=2?o.chi+" 級":"唔合格"}、英文 ${o.eng>=2?o.eng+" 級":"唔合格"}。`}${st.track==="DSE"?"你冇修讀創意藝術文憑。":o.dcaPass?"你攞到創意藝術文憑（資歷架構第三級）。":"你攞唔到創意藝術文憑。"}專修：${st.major?AREAS[st.major].n:"—"}。畢業創作：《${esc(st.gp||"無題")}》。${st.flags.noCert?"出席率唔夠八成，你冇中六畢業證書。":""}`;
+    :`${o.early?"你喺文憑試放榜之前已經收到取錄，係嗰年放榜前獲學士取錄嘅同學之一。":""}${o.chi==null?"你只讀 DCA，冇報考 DSE。":`DSE 中文 ${o.chi>=2?o.chi+" 級":"唔合格"}、英文 ${o.eng>=2?o.eng+" 級":"唔合格"}。`}${st.track==="DSE"?"你冇修讀創意藝術文憑。":o.dcaPass?"你攞到創意藝術文憑（資歷架構第三級）。":"你攞唔到創意藝術文憑。"}專修：${st.major?AREAS[st.major].n:"—"}。${st.track==="DSE"?"":`畢業創作：《${esc(st.gp||"無題")}》。`}${st.flags.noCert?"出席率唔夠八成，你冇中六畢業證書。":""}`;
   const num=(v,l)=>`<div><b>${v}</b><span>${l}</span></div>`,list=a=>a.join("、")||"冇";
   $("#end").innerHTML=`<div class="cert">
    <div class="top"><div class="k">香港兆基創意書院 · 2026–2029 · ${esc(st.p.name)}（${esc(st.p.nick)}）</div>
@@ -2340,7 +2437,7 @@ function renderEnd(){
    </section>
    <section><h3>結果圖</h3>
     <img class="shareimg" id="shareImg" alt="你嘅三年結果圖">
-    <div class="endbtns"><button type="button" class="btn primary" id="shareBtn">儲存／分享結果圖</button><button type="button" class="btn" id="copyRec">複製三年紀錄</button></div>
+    <div class="endbtns"><button type="button" class="btn primary" id="shareBtn">儲存／分享結果圖</button><button type="button" class="btn" id="shareTheme" aria-pressed="false"></button><button type="button" class="btn" id="copyRec">複製三年紀錄</button></div>
     <p style="margin:0;font-size:13px;color:var(--muted)">儲存唔到嘅話，長按（或者右撳）張圖都得。</p>
    </section>
    <section><h3>三年地圖</h3><div class="maplabels" id="map2"></div></section>
@@ -2363,7 +2460,9 @@ function renderEnd(){
   $("#log2").innerHTML=logHTML();
   renderMap("#map2");
   let shot=null;
-  const paint=()=>{if(st&&st.phase==="end"&&$("#shareImg")){shot=drawShare();$("#shareImg").src=shot.toDataURL("image/png");}};
+  let shareDark=!!store.get("hksc140-sharedark");
+  const paint=()=>{if(st&&st.phase==="end"&&$("#shareImg")){shot=drawShare(shareDark);$("#shareImg").src=shot.toDataURL("image/png");const b=$("#shareTheme");b.textContent=shareDark?"張圖轉淺色":"張圖轉深色";b.setAttribute("aria-pressed",shareDark);}};
+  $("#shareTheme").onclick=()=>{shareDark=!shareDark;store.set("hksc140-sharedark",shareDark);paint();};
   paint();if(document.fonts&&document.fonts.ready)document.fonts.ready.then(paint);
   $("#shareBtn").onclick=()=>shot.toBlob(async blob=>{
     // 喺 Claude Artifact 入面要經 downloads 功能儲存；獨立網頁就用分享或者直接下載
@@ -2374,7 +2473,7 @@ function renderEnd(){
     const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="hksc-140.png";document.body.appendChild(a);a.click();a.remove();toast("已經儲存結果圖");
   },"image/png");
   $("#copyRec").onclick=()=>{
-    const t=`書院人類 140分之1\n${st.p.name}（${st.p.nick}），2026年以${st.p.orig}身份入讀中四。\n專修：${st.major?AREAS[st.major].n:"—"}；畢業創作《${st.gp||"無題"}》\n去向：${o.name}（${o.cat}）\n作品 ${st.works} 件 · 遊學 ${st.trips.length} 次 · 獎項 ${st.awards.length} 個 · 黃紙 ${st.yellow} 張\nhttps://${SITE}/`;
+    const t=`書院人類 140分之1\n${st.p.name}（${st.p.nick}），2026年以${st.p.orig}身份入讀中四。\n專修：${st.major?AREAS[st.major].n:"—"}${st.track==="DSE"?"":`；畢業創作《${st.gp||"無題"}》`}\n去向：${o.name}（${o.cat}）\n作品 ${st.works} 件 · 遊學 ${st.trips.length} 次 · 獎項 ${st.awards.length} 個 · 黃紙 ${st.yellow} 張\nhttps://${SITE}/`;
     try{navigator.clipboard.writeText(t).then(()=>toast("已經複製"),()=>fallbackCopy(t));}catch(e){fallbackCopy(t);}
   };
   $("#again").onclick=()=>{store.del(SAVE);st=null;show("intro");checkResume();};
