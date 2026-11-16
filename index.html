@@ -3,6 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="隨機抽一個身份，入讀香港兆基創意書院，行完中四到中六三年。你會去到邊？（非官方模擬遊戲）">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://loeychau.github.io/hksc140/">
+<meta property="og:title" content="書院人類 140分之1">
+<meta property="og:description" content="隨機抽一個身份，入讀香港兆基創意書院，行完中四到中六三年。你會去到邊？（非官方模擬遊戲）">
+<meta property="og:image" content="https://loeychau.github.io/hksc140/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="apple-touch-icon" href="icon.png">
 <link rel="icon" type="image/png" href="icon.png">
 </head>
@@ -90,6 +99,11 @@ h1,h2,h3{text-wrap:balance;margin:0}
 .endings span{font-size:12px;padding:2px 9px;border:1px dashed var(--line);color:var(--muted)}
 .endings span.got{border:1.5px solid var(--ink);color:var(--ink);background:var(--card)}
 .endings span.new{background:var(--yellow);color:var(--on-yellow)}
+.achv{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:6px;margin-top:8px}
+.achv div{border:1px dashed var(--line);padding:6px 9px;font-size:13px;color:var(--muted)}
+.achv div.got{border:1.5px solid var(--ink);color:var(--ink);background:var(--card)}
+.achv div.new{background:var(--yellow);color:var(--on-yellow)}
+.achv small{display:block;font-size:12px;margin-top:2px}
 .startrow{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:6px}
 .startrow .btn.primary{font-size:18px;padding:10px 30px}
 .explain{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px;padding-block:28px;border-top:1.5px solid var(--ink)}
@@ -313,6 +327,8 @@ details.fact summary{cursor:pointer;font-family:var(--f-mono);font-size:12px;let
   .btn{min-height:44px}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+:root[data-calm] *{transition:none!important;animation:none!important}
+:root[data-big] body{zoom:1.15}
 </style>
 
 <div class="wrap">
@@ -321,7 +337,7 @@ details.fact summary{cursor:pointer;font-family:var(--f-mono);font-size:12px;let
 <section id="intro">
   <div class="topline">
     <span class="label">非官方模擬 · 根據學校周年報告、發展計劃及官網資料</span>
-    <span style="display:flex;gap:6px"><button class="btn small" id="sndBtn1" type="button">音效</button><button class="btn small" id="themeBtn1" type="button">◐ 深淺色</button></span>
+    <span style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn small" type="button" data-pref="big">大字</button><button class="btn small" type="button" data-pref="calm">減少動態</button><button class="btn small" id="sndBtn1" type="button">音效</button><button class="btn small" id="themeBtn1" type="button">◐ 深淺色</button></span>
   </div>
   <div class="hero">
     <div>
@@ -363,7 +379,7 @@ details.fact summary{cursor:pointer;font-family:var(--f-mono);font-size:12px;let
   <div class="explain">
     <div><h3>同一個 Mentor 班</h3><p>書院實行師友制（Mentorship）。你入學嗰陣，同班仲有四個同學。佢哋會問你借錢、求你幫手、同你嗌交、約你出街；佢哋嘅三年亦會按同樣嘅機率行落去。最後各自去邊，冇人預先知。</p></div>
     <div><h3>選擇會改變三年</h3><p>每個學期揀一個重心，喺創作週、選專修、DSE 同創意藝術文憑之間、升學申請呢啲關口做決定。之前揀過嘅嘢，之後會返嚟搵你。選擇會改變結果，但好難完全擺脫家境同時間嘅限制。</p></div>
-    <div><h3>你行過嘅結局</h3><p>每次畢業（或者冇畢業）都會記低。</p><div id="endingsIntro"></div></div>
+    <div><h3>你行過嘅結局</h3><p>每次畢業（或者冇畢業）都會記低。</p><div id="endingsIntro"></div><div id="achvIntro" style="margin-top:14px"></div></div>
   </div>
   <div class="roster-intro">
     <div class="rhead"><h2>書院人類名冊</h2><span class="label">校董會及教職員 · 書院官網</span></div>
@@ -393,6 +409,8 @@ details.fact summary{cursor:pointer;font-family:var(--f-mono);font-size:12px;let
         <button type="button" id="autoBtn" aria-pressed="false">自動抉擇：關</button>
         <button type="button" id="sndBtn2">音效：開</button>
         <button type="button" id="themeBtn2">◐ 深淺色</button>
+        <button type="button" data-pref="big">大字</button>
+        <button type="button" data-pref="calm">減少動態</button>
         <button type="button" id="quitBtn">離開（會自動儲存）</button>
         <button type="button" id="dropBtn" class="quitbtn">退學</button>
       </div>
@@ -487,7 +505,9 @@ const sig=x=>1/(1+Math.exp(-x));
 const val=v=>typeof v==="function"?v():v;
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const store={get(k){try{return JSON.parse(localStorage.getItem(k));}catch(e){return null;}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}},del(k){try{localStorage.removeItem(k);}catch(e){}}};
-const SAVE="hksc140-save-v3",SEEN="hksc140-endings";
+const SAVE="hksc140-save-v3",SEEN="hksc140-endings",ACHV="hksc140-achv",SITE="loeychau.github.io/hksc140";
+// 存檔版本：改 st 嘅結構就加一，再喺 UPGRADE 加一步；唔好改 SAVE 個名
+const SAVE_V=4;
 const isPhone=()=>matchMedia("(max-width:760px)").matches;
 function toast(t){const el=$("#toast");el.textContent=t;el.hidden=false;clearTimeout(toast._t);toast._t=setTimeout(()=>el.hidden=true,2200);}
 
@@ -502,6 +522,16 @@ function toggleTheme(){
 {const t=store.get("hksc140-theme");if(t)document.documentElement.setAttribute("data-theme",t);}
 const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const isDark=()=>css("--blend")==="screen";
+
+/* ============ 顯示設定：大字、減少動態 ============ */
+const pref={big:!!store.get("hksc140-big"),calm:!!store.get("hksc140-calm")};
+const calm=()=>pref.calm||matchMedia("(prefers-reduced-motion: reduce)").matches;
+const PREFN={big:"大字",calm:"減少動態"};
+function renderPrefs(){
+  const r=document.documentElement;r.toggleAttribute("data-big",pref.big);r.toggleAttribute("data-calm",pref.calm);
+  $$("[data-pref]").forEach(b=>{const k=b.dataset.pref;b.setAttribute("aria-pressed",pref[k]);b.textContent=PREFN[k]+"："+(pref[k]?"開":"關");});
+}
+function togglePref(k){pref[k]=!pref[k];store.set("hksc140-"+k,pref[k]);renderPrefs();if(st&&st.phase==="play")renderAll();}
 
 /* ============ sound（Web Audio 合成，冇音檔） ============ */
 const SOUNDS={ // [頻率, 幾時開始, 長度, 波形, 音量]
@@ -630,18 +660,19 @@ function genPerson(isPlayer){
   if(!isPlayer)Object.assign(p,{s:{...s},focus:pick(Object.keys(FOCUS)),status:"啱啱入學，仲認緊人",left:false,bond:15+Math.round(rnd()*25),color:pick(["--pink","--blue","--green"])});
   return p;
 }
+// 一局入面同個人背景無關嘅欄位。舊存檔冇嘅欄位會用呢度嘅預設值補返
+const blank=()=>({speed:1,paused:false,auto:false,hist:{health:[],spirit:[],rel:[],aes:[],know:[]},
+  job:null,absYear:0,absTotal:0,smoke:0,yellow:0,exes:0,focus:null,dropped:null,rotation:[],major:null,track:null,target:null,team:null,
+  flags:{},flagAt:{},cool:{},seen:[],works:0,lates:0,latesTotal:0,electives:null,studios:[],lecture:null,diary:1,awards:[],trips:[],interns:[],
+  log:[],queue:[],pending:null,last:null,fired:{},minorDone:{},mapv:[],crisisY:{},outcome:null});
 function newGame(len){
   const p=genPerson(true);
   const peers=[],used=new Set([p.nick]);
   while(peers.length<4){const q=genPerson(false);if(used.has(q.nick))continue;used.add(q.nick);peers.push(q);}
   const aff={};AKEYS.forEach(k=>aff[k]=rnd()*10);aff[p.interest]+=18;
-  st={v:3,len,phase:"card",i:0,prog:0,speed:1,paused:false,auto:false,
-    p,peers,s:{...p.stats},hist:{health:[],spirit:[],rel:[],aes:[],know:[]},
-    money:{aid:300,half:600,mid:1200,rich:2500}[p.fam.k],lunch:p.fam.money<=1?"market":"canteen",job:null,absYear:0,absTotal:0,smoke:0,yellow:0,
-    partner:p.orient==="無性戀"||rnd()>.22?null:mkPartner(p,rnd()<.4),exes:0,
-    focus:null,aff,dropped:null,rotation:[],major:null,track:null,target:null,team:null,
-    flags:{pet:rnd()<.35},flagAt:{},cool:{},seen:[],works:0,lates:0,latesTotal:0,electives:null,studios:[],lecture:null,diary:1,awards:[],trips:[],interns:[],
-    log:[],queue:[],pending:null,last:null,fired:{},minorDone:{},mapv:[],crisisY:{},outcome:null};
+  st={v:SAVE_V,len,phase:"card",i:0,prog:0,...blank(),p,peers,s:{...p.stats},
+    money:{aid:300,half:600,mid:1200,rich:2500}[p.fam.k],lunch:p.fam.money<=1?"market":"canteen",
+    partner:p.orient==="無性戀"||rnd()>.22?null:mkPartner(p,rnd()<.4),aff,flags:{pet:rnd()<.35}};
   addLog(`2026年9月，你以「${p.orig}」身份入讀香港兆基創意書院中四。${p.orig==="外校新生"?"之前讀"+p.prev+"。":"已經喺呢度讀咗三年初中。"}同學好快幫你改咗個花名：「${p.nick}」。`,true);
   save();
 }
@@ -1309,7 +1340,7 @@ function peerTick(){
 // once：成局只出一次；cd：出過之後要隔幾多個月先可以再出
 const R=(id,w,cond,o)=>({id,w,cond,once:1,...o});
 const RANDOM=[
- R("vape",2,()=>st.i>=2),R("weed",2,()=>st.i>=4),R("ers",2,()=>st.i>=6&&st.i<=30),
+ R("vape",2,()=>st.i>=2),R("weed",2,()=>st.i>=4),R("ers",.5,()=>st.i>=6&&st.i<=30&&(st.electives||[]).includes("倫理與宗教")),
  R("clique",3,()=>st.s.rel>=72&&st.s.spirit>=60),R("gameclass",2,()=>st.s.spirit<58),R("gamble",2,()=>st.s.rel>=50),
  R("mcd",3,()=>st.money<500&&!st.job&&st.i>=6),R("schoolsmoke",4,()=>st.smoke,{once:0}),R("quitsmoke",2,()=>st.smoke&&st.i>=10),
  R("bird",2,()=>st.i>=3),R("mentorfight",2,()=>st.i>=5),R("gang",3,()=>st.p.bg&&st.p.bg.k==="gang"&&st.i>=8),
@@ -1861,6 +1892,8 @@ function chooseFocus(k){
   else if(was!==k)addLog(`你將重心改做「${FOCUS[k].n}」。`);
   renderAll();save();nextFromQueue();
 }
+// 每月精神自然消耗；知識加審美超過 110 之後嘅額外消耗；精神低過 30 嗰陣嘅自然回升
+let DRAIN=.3,OVER=.025,REBOUND=.2;
 function endMonth(){
   const s=st.s,m=calMonth(st.i),school=m!==8;
   const f=st.focus?FOCUS[st.focus].fx:{};
@@ -1871,9 +1904,11 @@ function endMonth(){
     st.lates+=n;st.latesTotal+=n;
     if(n>=2&&rnd()<.5)addLog(`今個月你有 ${n} 次喺九點三十一分之後先拍八達通，計遲到。`);
   }else st.lates=0;
-  apply({spirit:-.6,health:-.3-(st.p.commute>=60?.5:0)});
+  apply({spirit:-DRAIN,health:-.3-(st.p.commute>=60?.5:0)});
   // 知識同審美越高，越覺得自己廢：精神下降，冇人可以樣樣滿分
-  const over=s.know+s.aes-110;if(over>0)apply({spirit:-over*.035});
+  const over=s.know+s.aes-110;if(over>0)apply({spirit:-over*OVER});
+  // 跌到好低嗰陣，人會自己慢慢抖返啲
+  if(s.spirit<30)apply({spirit:(30-s.spirit)*REBOUND});
   if(s.health>80&&s.know>70)apply({aes:-.6});
   // 錢
   st.money+=ALLOW[st.p.fam.k]+(st.job==="teacher"?1200:st.job==="mcd"?2200:0);
@@ -1939,7 +1974,7 @@ function finishGame(){
   if(st.phase==="end")return;
   st.phase="end";if(!st.outcome)resolveOutcome();
   addLog(st.outcome.k==="early"?`${st.outcome.when}，你離開咗九龍聯合道135號。`:"2029年8月，你離開咗九龍聯合道135號。",true);
-  const seen=store.get(SEEN)||{},k=endKey();st.newEnd=!seen[k];seen[k]=(seen[k]||0)+1;store.set(SEEN,seen);
+  const seen=store.get(SEEN)||{},k=endKey();st.newEnd=!seen[k];seen[k]=(seen[k]||0)+1;store.set(SEEN,seen);st.newAchv=grantAchv();
   snd.play("end");save();show("end");renderEnd();
 }
 
@@ -1976,7 +2011,7 @@ function renderCard(){
 // 抽人生：名同六格主要資料逐格停低
 function rollAnim(){
   window.scrollTo(0,0);
-  if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+  if(calm())return;
   const els=$$("#card h2, #kvMain b");if(!els.length)return;
   const fin=els.map(e=>e.textContent),pool=fin.concat(["荃灣","屯門","沙田","深水埗","黑社會背景","藝術家","獨生","綜援","家境寬裕","外校新生","原校升讀","單身","有男朋友","有女朋友"]);
   const btns=$$("#card .startrow button");btns.forEach(b=>b.disabled=true);
@@ -2216,6 +2251,32 @@ function endingsHTML(fresh){
   const seen=store.get(SEEN)||{};
   return `<div class="label">結局收集 ${ENDINGS.filter(([k])=>seen[k]).length} / ${ENDINGS.length}</div><div class="endings">${ENDINGS.map(([k,n])=>`<span class="${seen[k]?"got":""}${k===fresh?" new":""}">${seen[k]?esc(n)+(seen[k]>1?" ×"+seen[k]:""):"？？？"}</span>`).join("")}</div>`;
 }
+/* ============ achievements ============ */
+// [代號, 名, 點樣攞, 條件（o＝結局，g＝有冇畢業）]
+const ACHIEVE=[
+ ["clean","白紙一張","畢業嗰陣一張黃紙都冇",(o,g)=>g&&st.yellow===0],
+ ["book","黃紙釘成書","儲夠五張黃紙",()=>st.yellow>=5],
+ ["ontime","準時人類","三年遲到少過十次而畢業",(o,g)=>g&&st.latesTotal<10],
+ ["iron","鐵尺王","用鐵尺撬開課室門",()=>!!st.flags.ironking],
+ ["turtle","龜池守護者","保護龜池啲龜",()=>!!st.flags.turtleguard],
+ ["crew","一個都冇少","畢業嗰陣四個同學都仲喺度，全部係朋友或者死黨",(o,g)=>g&&alive().length===4&&alive().every(q=>q.bond>=45)],
+ ["ers","好，咁我退","ERS 老師問你做咩唔退學，你真係退咗",o=>o.ek==="ers"],
+ ["both","兩邊都要","DSE、DCA 雙修畢業，兼攞到創意藝術文憑",(o,g)=>g&&st.track==="BOTH"&&!!o.dcaPass],
+ ["sweet","行到最後","拍住拖畢業",(o,g)=>g&&!!st.partner],
+ ["fresh","精神爽利","畢業嗰陣精神有 60 或以上",(o,g)=>g&&st.s.spirit>=60],
+ ["all","行勻書院","行齊所有結局",()=>{const seen=store.get(SEEN)||{};return ENDINGS.every(([k])=>seen[k]);}]
+];
+// 結局嗰陣計一次；傳返今次新攞到嘅代號
+function grantAchv(){
+  const got=store.get(ACHV)||{},o=st.outcome,g=o.k!=="early"&&!st.flags.noCert,fresh=[];
+  ACHIEVE.forEach(([k,,,c])=>{if(!got[k]&&c(o,g)){got[k]=1;fresh.push(k);}});
+  if(fresh.length)store.set(ACHV,got);
+  return fresh;
+}
+function achvHTML(fresh=[]){
+  const got=store.get(ACHV)||{};
+  return `<div class="label">成就 ${ACHIEVE.filter(([k])=>got[k]).length} / ${ACHIEVE.length}</div><div class="achv">${ACHIEVE.map(([k,n,d])=>`<div class="${got[k]?"got":""}${fresh.includes(k)?" new":""}"><b>${got[k]?"✓ ":""}${n}</b><small>${d}</small></div>`).join("")}</div>`;
+}
 // 之前揀過嘅嘢，喺結局留低一句
 function epilogue(){
   const f=st.flags,a=[],best=alive().sort((x,y)=>y.bond-x.bond)[0],pt=st.partner;
@@ -2256,6 +2317,7 @@ function drawShare(){
   y+=3*44+26;
   x.fillStyle=mu;F(400,24,body);x.fillText("三年地圖：一格一個月，越深色身心越好",90,y);
   x.fillText("非官方模擬遊戲 · 角色同事件均屬虛構",90,H-84);
+  x.fillStyle=ink;F(600,26,mono);x.textAlign="right";x.fillText(SITE,W-90,H-84);x.textAlign="left";
   return c;
 }
 
@@ -2290,6 +2352,7 @@ function renderEnd(){
     <p style="margin:0;font-size:13px;color:var(--muted)">「其他」包括休學一年、未確定去向等。近年更多同學選擇用一年時間探索，才繼續學業。（周年報告 2024/25）</p>
    </section>
    <section>${endingsHTML(st.newEnd?endKey():"")}</section>
+   <section>${achvHTML(st.newAchv||[])}</section>
    <section><h3>你覺得創意書院點？</h3>
     <p style="margin:0;font-size:14px;color:var(--muted)">玩完之後，去睇吓 Baby Kingdom 討論區入面家長同學生點講創意書院，亦可以留低你嘅真實感受。</p>
     <div class="endbtns"><a class="btn primary" href="https://www.google.com/search?q=site%3Ababy-kingdom.com+%E5%85%86%E5%9F%BA%E5%89%B5%E6%84%8F%E6%9B%B8%E9%99%A2" target="_blank" rel="noopener">搵 Baby Kingdom 入面嘅創意書院討論</a></div>
@@ -2311,7 +2374,7 @@ function renderEnd(){
     const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="hksc-140.png";document.body.appendChild(a);a.click();a.remove();toast("已經儲存結果圖");
   },"image/png");
   $("#copyRec").onclick=()=>{
-    const t=`書院人類 140分之1\n${st.p.name}（${st.p.nick}），2026年以${st.p.orig}身份入讀中四。\n專修：${st.major?AREAS[st.major].n:"—"}；畢業創作《${st.gp||"無題"}》\n去向：${o.name}（${o.cat}）\n作品 ${st.works} 件 · 遊學 ${st.trips.length} 次 · 獎項 ${st.awards.length} 個 · 黃紙 ${st.yellow} 張`;
+    const t=`書院人類 140分之1\n${st.p.name}（${st.p.nick}），2026年以${st.p.orig}身份入讀中四。\n專修：${st.major?AREAS[st.major].n:"—"}；畢業創作《${st.gp||"無題"}》\n去向：${o.name}（${o.cat}）\n作品 ${st.works} 件 · 遊學 ${st.trips.length} 次 · 獎項 ${st.awards.length} 個 · 黃紙 ${st.yellow} 張\nhttps://${SITE}/`;
     try{navigator.clipboard.writeText(t).then(()=>toast("已經複製"),()=>fallbackCopy(t));}catch(e){fallbackCopy(t);}
   };
   $("#again").onclick=()=>{store.del(SAVE);st=null;show("intro");checkResume();};
@@ -2324,7 +2387,20 @@ function fallbackCopy(t){
 
 /* ============ save / resume ============ */
 function save(){if(st)store.set(SAVE,st);}
-function checkResume(){const s=store.get(SAVE);$("#resumeBtn").hidden=!(s&&s.v===3&&(s.phase==="play"||s.phase==="end"));$("#endingsIntro").innerHTML=endingsHTML();}
+// 舊存檔升級：UPGRADE[n] 將第 n 版嘅存檔改成第 n+1 版
+const UPGRADE={3:s=>{}};
+function upgrade(s){
+  if(!s||typeof s!=="object"||!(s.v>=3)||s.v>SAVE_V||!s.p||!s.s||!Array.isArray(s.peers))return null;
+  try{
+    while(s.v<SAVE_V){(UPGRADE[s.v]||(()=>{}))(s);s.v++;}
+    const d=blank();for(const k in d)if(!(k in s))s[k]=d[k];
+    // 新版本可能刪咗或者改咗名嘅事件：唔好等佢卡死
+    if(s.pending&&s.pending.type==="event"&&!EVMAP[s.pending.id])s.pending=null;
+    s.queue=s.queue.filter(q=>q.type!=="event"||EVMAP[q.id]);
+    return s;
+  }catch(e){return null;}
+}
+function checkResume(){const s=upgrade(store.get(SAVE));$("#resumeBtn").hidden=!(s&&(s.phase==="play"||s.phase==="end"));$("#endingsIntro").innerHTML=endingsHTML();$("#achvIntro").innerHTML=achvHTML();}
 function resume(data){
   st=data;st.paused=true;st._ep={};
   if(st.phase==="end"){show("end");renderEnd();return;}
@@ -2337,7 +2413,11 @@ function resume(data){
 let chosenLen=20;
 $$("#lenSeg button").forEach(b=>b.onclick=()=>{chosenLen=+b.dataset.len;$$("#lenSeg button").forEach(x=>x.setAttribute("aria-pressed",x===b));});
 $("#startBtn").onclick=()=>{newGame(chosenLen);show("card");renderCard();rollAnim();};
-$("#resumeBtn").onclick=()=>{const s=store.get(SAVE);if(s)resume(s);};
+$("#resumeBtn").onclick=()=>{
+  const s=upgrade(store.get(SAVE));
+  try{if(!s)throw 0;resume(s);}
+  catch(e){st=null;show("intro");$("#resumeBtn").hidden=true;toast("上次嘅存檔開唔到，請重新入學。");}
+};
 $("#themeBtn1").onclick=$("#themeBtn2").onclick=toggleTheme;
 $("#sndBtn1").onclick=$("#sndBtn2").onclick=()=>snd.toggle();
 $("#pauseBtn").onclick=()=>{st.paused=!st.paused;renderTop();save();};
@@ -2359,14 +2439,15 @@ document.addEventListener("keydown",e=>{if(!st||st.phase!=="play"||e.target.clos
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>{if(st&&st.phase==="play")drawScene();});
 // 電腦闊度預設打開重心同午飯；電話就收埋，慳返位
 if(!isPhone())$$("details.fold").forEach(d=>d.open=true);
-renderSound();
+renderSound();renderPrefs();
+$$("[data-pref]").forEach(b=>b.onclick=()=>togglePref(b.dataset.pref));
 
 {const r1=$("#roster1"),r2=$("#roster2");$("#rosterN").textContent=renderRoster(r1,"")+" 項";renderRoster(r2,"");
  $("#rosterQ1").addEventListener("input",e=>renderRoster(r1,e.target.value));$("#rosterQ2").addEventListener("input",e=>renderRoster(r2,e.target.value));}
 // 開始頁計數：開咗呢頁之後，562 個學生合共喺學校過咗幾多秒
 const t0=Date.now();setInterval(()=>{const el=$("#cntSec");if(el)el.textContent=Math.floor((Date.now()-t0)/1000*562).toLocaleString("zh-HK");},250);
 // 測試用：網址加 ?debug 先會開
-if(/[?&]debug/.test(location.search))window.__hksc={get st(){return st;},EVMAP,RANDOM,DAILY,EVENTS,getOpts,val,choose,chooseFocus,skipToNext,newGame,startMonth,finishGame,show,renderAll,renderEnd,mkPartner,flag};
+if(/[?&]debug/.test(location.search))window.__hksc={get st(){return st;},upgrade,grantAchv,blank,save,set tune(v){[DRAIN,OVER,REBOUND]=v;},EVMAP,RANDOM,DAILY,EVENTS,getOpts,val,choose,chooseFocus,skipToNext,newGame,startMonth,finishGame,show,renderAll,renderEnd,mkPartner,flag};
 
 /* hot reload */
 window.claude?.hot?.snapshot?.(()=>({st}));
